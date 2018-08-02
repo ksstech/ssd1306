@@ -163,4 +163,4 @@ void	ssd1306PutString(ssd1306_t *, uint8_t *) ;
 
 int32_t ssd1306Diagnostics(ssd1306_t * pDev) ;
 int32_t ssd1306Identify(uint8_t eChan, uint8_t addr) ;
-void	ssd1306Report(ssd1306_t * pDev) ;
+void	ssd1306Report(int32_t Handle, ssd1306_t * pDev) ;
