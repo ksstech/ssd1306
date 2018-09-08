@@ -8,6 +8,8 @@
 #include	"x_definitions.h"
 #include	"x_ticktimer.h"
 
+#include	<string.h>
+
 // ######################################## DEBUG MACROS ###########################################
 
 #define	ssd1306DEBUG				0x0002
