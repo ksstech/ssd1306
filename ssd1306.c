@@ -17,16 +17,14 @@
 #define	ssd1306DEBUG_CMDS			(ssd1306DEBUG & 0x0001)
 #define	ssd1306DEBUG_PARAM			(ssd1306DEBUG & 0x0002)
 #define	ssd1306DEBUG_TIMING			(ssd1306DEBUG & 0x0004)
+#define	ssd1306DEBUG_CONTRAST		(ssd1306DEBUG & 0x0008)
 
 // ################################ private static variables ######################################
 
 
 // ################################# private public variables #####################################
 
-ssd1306_t sSSD1306 = {
-		.max_seg	= LCD_WIDTH,
-		.max_page	= LCD_HEIGHT / FONT_HEIGHT,
-} ;
+ssd1306_t sSSD1306 = { .max_seg=LCD_WIDTH, .max_page=LCD_HEIGHT/FONT_HEIGHT, } ;
 
 /**
  * ssd1306SendCommand_?() - send a single/dual/triple byte command(s) to the controller
@@ -39,7 +37,7 @@ void	ssd1306SendCommand_1(ssd1306_t * pDev, uint8_t Cmd1) {
 	uint8_t cBuf[2] ;
 	cBuf[0]	= 0x00 ;									// command following
 	cBuf[1]	= Cmd1 ;
-	halI2C_Write(&pDev->sI2Cdev, &cBuf[0], 2) ;
+	halI2C_Write(&pDev->sI2Cdev, cBuf, sizeof(cBuf)) ;
 }
 
 void	ssd1306SendCommand_2(ssd1306_t * pDev, uint8_t Cmd1, uint8_t Cmd2) {
@@ -47,7 +45,7 @@ void	ssd1306SendCommand_2(ssd1306_t * pDev, uint8_t Cmd1, uint8_t Cmd2) {
 	cBuf[0]	= 0x00 ;									// commands following
 	cBuf[1]	= Cmd1 ;
 	cBuf[2]	= Cmd2 ;
-	halI2C_Write(&pDev->sI2Cdev, &cBuf[0], 3) ;
+	halI2C_Write(&pDev->sI2Cdev, cBuf, sizeof(cBuf)) ;
 }
 
 void	ssd1306SendCommand_3(ssd1306_t * pDev, uint8_t Cmd1, uint8_t Cmd2, uint8_t Cmd3) {
@@ -56,7 +54,7 @@ void	ssd1306SendCommand_3(ssd1306_t * pDev, uint8_t Cmd1, uint8_t Cmd2, uint8_t 
 	cBuf[1]	= Cmd1 ;
 	cBuf[2]	= Cmd2 ;
 	cBuf[3]	= Cmd3 ;
-	halI2C_Write(&pDev->sI2Cdev, cBuf, 4) ;
+	halI2C_Write(&pDev->sI2Cdev, cBuf, sizeof(cBuf)) ;
 }
 
 uint8_t	ssd1306GetStatus(ssd1306_t * pDev) {
@@ -68,6 +66,7 @@ uint8_t	ssd1306GetStatus(ssd1306_t * pDev) {
 /* Functions to configure the basic operation of the controller */
 
 void	ssd1306SetDisplayState(ssd1306_t * pDev, uint8_t State) {
+	IF_myASSERT(ssd1306DEBUG_PARAM, State < 0x02) ;
 	ssd1306SendCommand_1(pDev, State ? ssd1306DISPLAYON : ssd1306DISPLAYOFF) ;
 }
 
@@ -100,7 +99,44 @@ void	ssd1306SetOffset(ssd1306_t * pDev, uint8_t Offset) {
  * @param	Contrast - 0->255 dim to bright
  */
 void	ssd1306SetContrast(ssd1306_t * pDev, uint8_t Contrast) {
+/* See https://github.com/ThingPulse/esp8266-oled-ssd1306/issues/134
+ * Contrast		PC_0 	PC_1	Vcom
+ * 0x00			0x1F	0x11	0x00
+ * 0x10			0x1E	0x11
+ * 0x20			0x2D	0x22
+ * 0x30			0x3C	0x33
+ * 0x40			0x4B	0x44
+ * 0x50			0x5A	0x55	0x00
+ * 0x60			0x69	0x66	0x20
+ * 0x70			0x78	0x77
+ * 0x80			0x87	0x88
+ * 0x90			0x96	0x99
+ * 0xA0			0xA5	0xAA	0x20
+ * 0xB0			0xB4	0xBB	0x30
+ * 0xC0			0xC3	0xCC
+ * 0xD0			0xD2	0xDD
+ * 0xE0			0xE1	0xEE
+ * 0xFF			0xF1 	0xFF	0x30
+ */
+	uint8_t RelContrast = Contrast >> 4 ;
+#if 	0
+	uint8_t PreCharge = RelContrast == 0x00 ? 0x10 : RelContrast << 4 ;
+	PreCharge |= RelContrast  == 0x0F ? 0x01 : 0x0F - RelContrast ;
+#elif	1
+	uint8_t PreCharge = RelContrast << 4 | RelContrast ;
+	PreCharge = PreCharge == 0x00 ? 0x11 : PreCharge ;
+#endif
+	ssd1306SendCommand_2(pDev, ssd1306SETPRECHARGE, PreCharge) ;
 	ssd1306SendCommand_2(pDev, ssd1306SETCONTRAST, Contrast) ;
+	uint8_t NewVcom = RelContrast < 0x06 ? 0x00 : RelContrast < 0x0B ? 0x20 : 0x30 ;
+	ssd1306SendCommand_2(pDev, ssd1306SETVCOMDESELECT, NewVcom) ;
+
+	if (Contrast == 0) {
+		ssd1306SetDisplayState(&sSSD1306, 0) ;		// switch display off
+	} else {
+		ssd1306SetDisplayState(&sSSD1306, 1) ;		// switch display on
+	}
+	IF_PRINT(ssd1306DEBUG_CONTRAST, "Contrast=0x%02X  PreCharge=0x%02X  Vcom=0x%02X\n", Contrast, PreCharge, NewVcom) ;
 }
 
 void	ssd1306SetInverse(ssd1306_t * pDev, uint8_t State) {
@@ -119,7 +155,7 @@ void	ssd1306SetPageAddr(ssd1306_t * pDev, uint8_t Page) {
 	ssd1306SendCommand_3(pDev, ssd1306PAGEADDR, Page, pDev->max_page) ;
 }
 
-/* High level functions to control window/corsor/scrolling etc */
+/* High level functions to control window/cursor/scrolling etc */
 
 void	ssd1306SetTextCursor(ssd1306_t * pDev, uint8_t X, uint8_t Y) {
 	ssd1306SetPageAddr(pDev, Y) ;
@@ -152,12 +188,12 @@ void	ssd1306Init(ssd1306_t * pDev) {
 	ssd1306SendCommand_1(pDev, ssd1306COMSCANDEC) ;							// ok
 	ssd1306SendCommand_2(pDev, ssd1306SETCOMPINS, 0x12) ;					// ok
 
-	ssd1306SetContrast(pDev, 0x8F) ;
+//	ssd1306SetContrast(pDev, 0x00) ;
 	ssd1306SendCommand_2(pDev, ssd1306SETDISPLAYCLOCKDIV, 0x80) ;			// ok
 
-	ssd1306SendCommand_2(pDev, ssd1306SETPRECHARGE, 0xF1) ;					// ok, internal Vcc
-	ssd1306SendCommand_2(pDev, ssd1306SETVCOMDESELECT, 0x40) ;				// ok
-	ssd1306SendCommand_2(pDev, ssd1306CHARGEPUMP, 0x14) ;					// ok, internal Vcc
+//	ssd1306SendCommand_2(pDev, ssd1306SETPRECHARGE, 0xF1) ;					// ok, internal Vcc
+//	ssd1306SendCommand_2(pDev, ssd1306SETVCOMDESELECT, 0x40) ;				// ok
+	ssd1306SendCommand_2(pDev, ssd1306CHARGEPUMP, ssd1306CHARGEPUMP_ON) ;	// ok, internal Vcc
 
 	ssd1306SetMemoryMode(pDev, 0x00) ;										// horizontal mode, wrap to next page & around
 
@@ -212,15 +248,15 @@ int		ssd1306PutC(int cChr) { return ssd1306PutChar(&sSSD1306, cChr) ; }
 void	ssd1306PutString(ssd1306_t * pDev, uint8_t * pString) { while(*pString) ssd1306PutChar(pDev, *pString++) ; }
 
 int32_t ssd1306Diagnostics(ssd1306_t * pDev) {
-#if 0
+	PRINT("ssd1306: Filling screen\n") ;
 	ssd1306SetTextCursor(pDev, 0, 0) ; ssd1306PutString(pDev, (uint8_t *) "|00000000|") ;
 	ssd1306SetTextCursor(pDev, 0, 1) ; ssd1306PutString(pDev, (uint8_t *) "+11111111+") ;
 	ssd1306SetTextCursor(pDev, 0, 2) ; ssd1306PutString(pDev, (uint8_t *) "=22222222=") ;
 	ssd1306SetTextCursor(pDev, 0, 3) ; ssd1306PutString(pDev, (uint8_t *) "[33333333]") ;
 	ssd1306SetTextCursor(pDev, 0, 4) ; ssd1306PutString(pDev, (uint8_t *) "{44444444}") ;
 	ssd1306SetTextCursor(pDev, 0, 5) ; ssd1306PutString(pDev, (uint8_t *) "(55555555)") ;
-#endif
-#if 0
+
+	PRINT("ssd1306: Writing bars\n") ;
 	uint8_t cBuf[1+LCD_WIDTH] ;
 	ssd1306SetTextCursor(pDev, 0, 0) ;
 	cBuf[0]	= 0x40 ;								// sending data
@@ -241,15 +277,14 @@ int32_t ssd1306Diagnostics(ssd1306_t * pDev) {
 
 	memset(&cBuf[1], 0x11, LCD_WIDTH) ;
 	halI2C_Write(&pDev->sI2Cdev, cBuf, sizeof(cBuf)) ;
-#endif
-#if 0
+
+	PRINT("ssd1306: Clearing the screen\n") ;
 	ssd1306Clear(pDev) ;
 	ssd1306SetPageAddr(pDev, 0) ;
 	ssd1306SetSegmentAddr(pDev, 0) ;
 	for(int32_t i = 0; i < (LCD_COLUMNS * LCD_LINES); i++) {
 		ssd1306PutChar(pDev, i + CHR_SPACE) ;
 	}
-#endif
 	return erSUCCESS ;
 }
 

@@ -79,12 +79,14 @@
 #define ssd1306ACTIVATE_SCROLL						0x2F
 #define ssd1306SET_VERTICAL_SCROLL_AREA 			0xA3
 
-#define ssd1306SETCONTRAST							0x81		// +0->255)
+#define ssd1306SETCONTRAST							0x81		// 0 -> 255
 
 #define ssd1306DISPLAYALLON_RESUME					0xA4
 #define ssd1306DISPLAYALLON							0xA5
+
 #define ssd1306NORMALDISPLAY						0xA6
 #define ssd1306INVERTDISPLAY						0xA7
+
 #define ssd1306DISPLAYOFF							0xAE
 #define ssd1306DISPLAYON							0xAF
 
@@ -92,9 +94,12 @@
 #define ssd1306SETCOMPINS							0xDA
 
 #define ssd1306SETVCOMDESELECT						0xDB
+#define ssd1306SETVCOMDESELECT_0v65					0x00
+#define ssd1306SETVCOMDESELECT_0v77					0x20
+#define ssd1306SETVCOMDESELECT_0v83					0x30
 
 #define ssd1306SETDISPLAYCLOCKDIV					0xD5
-#define ssd1306SETPRECHARGE							0xD9
+#define ssd1306SETPRECHARGE							0xD9		// P2=10->F0 | P1=01->0F
 
 #define ssd1306SETMULTIPLEX							0xA8
 
@@ -113,6 +118,9 @@
 #define ssd1306SEGREMAP								0xA0
 
 #define ssd1306CHARGEPUMP							0x8D
+#define ssd1306CHARGEPUMP_OFF						0x10
+#define ssd1306CHARGEPUMP_ON						0x14
+
 
 #define ssd1306EXTERNALVCC							0x01
 #define ssd1306SWITCHCAPVCC							0x02
