@@ -10,14 +10,12 @@
 
 #include	<string.h>
 
-// ######################################## DEBUG MACROS ###########################################
+#define	debugFLAG					0x0002
 
-#define	ssd1306DEBUG				0x0002
-
-#define	ssd1306DEBUG_CMDS			(ssd1306DEBUG & 0x0001)
-#define	ssd1306DEBUG_PARAM			(ssd1306DEBUG & 0x0002)
-#define	ssd1306DEBUG_TIMING			(ssd1306DEBUG & 0x0004)
-#define	ssd1306DEBUG_CONTRAST		(ssd1306DEBUG & 0x0008)
+#define	debugCMDS					(debugFLAG & 0x0001)
+#define	debugPARAM					(debugFLAG & 0x0002)
+#define	debugTIMING					(debugFLAG & 0x0004)
+#define	debugCONTRAST				(debugFLAG & 0x0008)
 
 // ################################ private static variables ######################################
 
@@ -66,7 +64,7 @@ uint8_t	ssd1306GetStatus(ssd1306_t * pDev) {
 /* Functions to configure the basic operation of the controller */
 
 void	ssd1306SetDisplayState(ssd1306_t * pDev, uint8_t State) {
-	IF_myASSERT(ssd1306DEBUG_PARAM, State < 0x02) ;
+	IF_myASSERT(debugPARAM, State < 0x02) ;
 	ssd1306SendCommand_1(pDev, State ? ssd1306DISPLAYON : ssd1306DISPLAYOFF) ;
 }
 
@@ -82,7 +80,7 @@ void	ssd1306SetScanDirection(ssd1306_t * pDev, uint8_t State) {
  *  @param	Mode = 0/horizontal  1/vertical  2/page
  */
 void	ssd1306SetMemoryMode(ssd1306_t * pDev, uint8_t Mode) {
-	IF_myASSERT(ssd1306DEBUG_PARAM, Mode < 0x03) ;
+	IF_myASSERT(debugPARAM, Mode < 0x03) ;
 	pDev->mem_mode	= Mode ;
 	ssd1306SendCommand_2(pDev, ssd1306MEMORYMODE, Mode) ;
 }
@@ -91,7 +89,7 @@ void	ssd1306SetMemoryMode(ssd1306_t * pDev, uint8_t Mode) {
  * @param	Offset - 0->63 Pan up or down
  */
 void	ssd1306SetOffset(ssd1306_t * pDev, uint8_t Offset) {
-	IF_myASSERT(ssd1306DEBUG_PARAM, Offset < SSD1306_MAX_COLUMN) ;
+	IF_myASSERT(debugPARAM, Offset < SSD1306_MAX_COLUMN) ;
 	ssd1306SendCommand_2(pDev, ssd1306SETDISPLAYOFFSET, Offset) ;
 }
 
@@ -136,7 +134,7 @@ void	ssd1306SetContrast(ssd1306_t * pDev, uint8_t Contrast) {
 	} else {
 		ssd1306SetDisplayState(&sSSD1306, 1) ;		// switch display on
 	}
-	IF_PRINT(ssd1306DEBUG_CONTRAST, "Contrast=0x%02X  PreCharge=0x%02X  Vcom=0x%02X\n", Contrast, PreCharge, NewVcom) ;
+	IF_PRINT(debugCONTRAST, "Contrast=0x%02X  PreCharge=0x%02X  Vcom=0x%02X\n", Contrast, PreCharge, NewVcom) ;
 }
 
 void	ssd1306SetInverse(ssd1306_t * pDev, uint8_t State) {
@@ -163,7 +161,7 @@ void	ssd1306SetTextCursor(ssd1306_t * pDev, uint8_t X, uint8_t Y) {
 }
 
 void 	ssd1306Clear(ssd1306_t * pDev) {		// 1=14,129  2=12,033  3=11,338  6=10,645 uSec
-	IF_EXEC_1(ssd1306DEBUG_TIMING, xClockTimerStart, clockTIMER_SSD1306) ;
+	IF_EXEC_1(debugTIMING, xClockTimerStart, clockTIMER_SSD1306) ;
 	#define LINES	3
 	uint8_t	cBuf[1+LCD_WIDTH*LINES] ;
 	memset(cBuf, 0, sizeof(cBuf)) ;
@@ -173,7 +171,7 @@ void 	ssd1306Clear(ssd1306_t * pDev) {		// 1=14,129  2=12,033  3=11,338  6=10,64
 		halI2C_Write(&pDev->sI2Cdev, cBuf, sizeof(cBuf)) ;
 	}
 	ssd1306SetTextCursor(pDev, 0, 0) ;
-	IF_EXEC_1(ssd1306DEBUG_TIMING, xClockTimerStop, clockTIMER_SSD1306) ;
+	IF_EXEC_1(debugTIMING, xClockTimerStop, clockTIMER_SSD1306) ;
 }
 
 /**
@@ -216,11 +214,11 @@ int		ssd1306PutChar(ssd1306_t * pDev, uint8_t cChr) {
 	if ((pDev->sI2Cdev.epidI2C.devclass != devSSD1306) || (pDev->sI2Cdev.epidI2C.subclass != subDSP64X48)) {
 		return cChr ;
 	}
-	IF_EXEC_1(ssd1306DEBUG_TIMING, xClockTimerStart, clockTIMER_SSD1306_2) ;
+	IF_EXEC_1(debugTIMING, xClockTimerStart, clockTIMER_SSD1306_2) ;
 	uint8_t * pFont = (uint8_t *) &font[cChr * (FONT_WIDTH-1)] ;
 	uint8_t	cBuf[FONT_WIDTH+1] ;
 	int32_t	i ;
-	IF_PRINT(ssd1306DEBUG_CMDS,"%c : %02x-%02x-%02x-%02x-%02x\n", cChr, *pFont, *(pFont+1), *(pFont+2), *(pFont+3), *(pFont+4)) ;
+	IF_PRINT(debugCMDS,"%c : %02x-%02x-%02x-%02x-%02x\n", cChr, *pFont, *(pFont+1), *(pFont+2), *(pFont+3), *(pFont+4)) ;
 
 	cBuf[0]	= 0x40 ;									// data following
 	for(i = 1; i < FONT_WIDTH; i++) {
@@ -239,7 +237,7 @@ int		ssd1306PutChar(ssd1306_t * pDev, uint8_t cChr) {
 		ssd1306SetPageAddr(pDev, pDev->page) ;
 		ssd1306SetSegmentAddr(pDev, 0) ;
 	}
-	IF_EXEC_1(ssd1306DEBUG_TIMING, xClockTimerStop, clockTIMER_SSD1306_2) ;
+	IF_EXEC_1(debugTIMING, xClockTimerStop, clockTIMER_SSD1306_2) ;
 	return cChr ;
 }
 
@@ -296,7 +294,7 @@ int32_t	ssd1306Identify(uint8_t eChan, uint8_t Addr) {
 
 	// detect & verify existence.
 	uint8_t ssd1306Status = ssd1306GetStatus(pDev);
-	IF_PRINT(ssd1306DEBUG_CMDS, "ssd1306 Chan=%d Addr=%d Status = 0x%02x\n", eChan, Addr, ssd1306Status) ;
+	IF_PRINT(debugCMDS, "ssd1306 Chan=%d Addr=%d Status = 0x%02x\n", eChan, Addr, ssd1306Status) ;
 
 	// valid device signature not found
 	if ((ssd1306Status & 0x03) != 0x03) {
