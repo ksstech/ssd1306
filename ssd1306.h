@@ -127,7 +127,13 @@
 
 // ###################################### BUILD : CONFIG definitions ###############################
 
-#define	ssd1306VERSION								"v0.0.1.1"
+#define	ssd1306VERSION								"v0.0.1.2"
+/*	Date		Ver			Comments/changes
+ * 20180630		0.0.1.0		Initial version
+ * 20181129		0.0.1.1		Enabled fade-in support
+ * 20190105		0.0.1.2		Simplified API to support single SSD1306 device
+ */
+
 #define	SSD1306_ADDR_PRI							0x3C
 #define	SSD1306_ADDR_SEC							0x3D
 
@@ -147,28 +153,26 @@ typedef struct _ssd1306 {
 
 // ######################################## public variables #######################################
 
-extern	const uint8_t	font[] ;
-extern	ssd1306_t sSSD1306 ;
+extern	const char	font[] ;
 
 // ################################### EXTERNAL FUNCTIONS ##########################################
 
-uint8_t	ssd1306GetStatus(ssd1306_t * pDev) ;
-void	ssd1306SetDisplayState(ssd1306_t * pDev, uint8_t State) ;
-void	ssd1306SetScrollState(ssd1306_t * pDev, uint8_t State) ;
-void	ssd1306SetScanDirection(ssd1306_t * pDev, uint8_t State) ;
-void	ssd1306SetMemoryMode(ssd1306_t * pDev, uint8_t Mode) ;
-void	ssd1306SetOffset(ssd1306_t * pDev, uint8_t Offset) ;
-void	ssd1306SetContrast(ssd1306_t * pDev, uint8_t Contrast) ;
-void	ssd1306SetInverse(ssd1306_t * pDev, uint8_t State) ;
-void	ssd1306SetSegmentAddr(ssd1306_t * pDev, uint8_t Segment) ;
-void	ssd1306SetPageAddr(ssd1306_t * pDev, uint8_t Page) ;
-void	ssd1306SetTextCursor(ssd1306_t * pDev, uint8_t X, uint8_t Y) ;
-void 	ssd1306Clear(ssd1306_t * pDev) ;
-void	ssd1306Init(ssd1306_t *) ;
-int		ssd1306PutChar(ssd1306_t *, uint8_t) ;
-int		ssd1306PutC(int) ;
-void	ssd1306PutString(ssd1306_t *, uint8_t *) ;
+uint8_t	ssd1306GetStatus(void) ;
+void	ssd1306SetDisplayState(uint8_t State) ;
+void	ssd1306SetScrollState(uint8_t State) ;
+void	ssd1306SetScanDirection(uint8_t State) ;
+void	ssd1306SetMemoryMode(uint8_t Mode) ;
+void	ssd1306SetOffset(uint8_t Offset) ;
+void	ssd1306SetContrast(uint8_t Contrast) ;
+void	ssd1306SetInverse(uint8_t State) ;
+void	ssd1306SetSegmentAddr(uint8_t Segment) ;
+void	ssd1306SetPageAddr(uint8_t Page) ;
+void	ssd1306SetTextCursor(uint8_t X, uint8_t Y) ;
+void 	ssd1306Clear(void) ;
+void	ssd1306Init(void) ;
+int		ssd1306PutChar(int cChr) ;
+void	ssd1306PutString(const char *) ;
 
-int32_t ssd1306Diagnostics(ssd1306_t * pDev) ;
+int32_t ssd1306Diagnostics(void) ;
 int32_t ssd1306Identify(uint8_t eChan, uint8_t addr) ;
-void	ssd1306Report(int32_t Handle, ssd1306_t * pDev) ;
+void	ssd1306Report(int32_t Handle) ;
