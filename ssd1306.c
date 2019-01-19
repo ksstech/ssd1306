@@ -155,7 +155,7 @@ void	ssd1306SetPageAddr(uint8_t Page) {
 void	ssd1306SetTextCursor(uint8_t X, uint8_t Y) { ssd1306SetPageAddr(Y) ; ssd1306SetSegmentAddr(X * FONT_WIDTH) ; }
 
 void 	ssd1306Clear(void) {
-	IF_EXEC_1(debugTIMING, xClockTimerStart, clockTIMER_SSD1306) ;
+	IF_EXEC_1(debugTIMING, xSysTimerStart, systimerSSD1306) ;
 	#define LINES	3									// 1=14,129  2=12,033  3=11,338  6=10,645 uSec
 	uint8_t	cBuf[1+LCD_WIDTH*LINES] ;
 	memset(cBuf, 0, sizeof(cBuf)) ;
@@ -165,13 +165,14 @@ void 	ssd1306Clear(void) {
 		halI2C_Write(&sSSD1306.sI2Cdev, cBuf, sizeof(cBuf)) ;
 	}
 	ssd1306SetTextCursor(0, 0) ;
-	IF_EXEC_1(debugTIMING, xClockTimerStop, clockTIMER_SSD1306) ;
+	IF_EXEC_1(debugTIMING, xSysTimerStop, systimerSSD1306) ;
 }
 
 /**
  * ssd1306Init() - initialise the controller
  */
 void	ssd1306Init(void) {
+	IF_SYSTIMER_RESET(debugTIMING, systimerSSD1306, 1, myMS_TO_CLOCKS(2), myMS_TO_CLOCKS(15)) ;
 	ssd1306SendCommand_2(ssd1306SETMULTIPLEX, LCD_HEIGHT-1) ;
 	ssd1306SetOffset(0) ;
 	ssd1306SendCommand_1(ssd1306SETSTARTLINE | 0x0) ;					// ok
@@ -207,7 +208,7 @@ int		ssd1306PutChar(int cChr) {
 	if ((sSSD1306.sI2Cdev.epidI2C.devclass != devSSD1306) || (sSSD1306.sI2Cdev.epidI2C.subclass != subDSP64X48)) {
 		return cChr ;
 	}
-	IF_EXEC_1(debugTIMING, xClockTimerStart, clockTIMER_SSD1306_2) ;
+	IF_EXEC_1(debugTIMING, xSysTimerStart, systimerSSD1306_2) ;
 	const char * pFont = &font[cChr * (FONT_WIDTH-1)] ;
 	uint8_t	cBuf[FONT_WIDTH+1] ;
 	int32_t	i ;
@@ -228,7 +229,7 @@ int		ssd1306PutChar(int cChr) {
 		ssd1306SetPageAddr(sSSD1306.page) ;
 		ssd1306SetSegmentAddr(0) ;
 	}
-	IF_EXEC_1(debugTIMING, xClockTimerStop, clockTIMER_SSD1306_2) ;
+	IF_EXEC_1(debugTIMING, xSysTimerStop, systimerSSD1306_2) ;
 	return cChr ;
 }
 
