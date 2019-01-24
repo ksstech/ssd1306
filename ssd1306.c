@@ -172,7 +172,7 @@ void 	ssd1306Clear(void) {
  * ssd1306Init() - initialise the controller
  */
 void	ssd1306Init(void) {
-	IF_SYSTIMER_RESET(debugTIMING, systimerSSD1306, 1, myMS_TO_CLOCKS(2), myMS_TO_CLOCKS(15)) ;
+	IF_SYSTIMER_RESET(debugTIMING, systimerSSD1306, systimerCLOCKS, "SSD1306", myMS_TO_CLOCKS(2), myMS_TO_CLOCKS(15)) ;
 	ssd1306SendCommand_2(ssd1306SETMULTIPLEX, LCD_HEIGHT-1) ;
 	ssd1306SetOffset(0) ;
 	ssd1306SendCommand_1(ssd1306SETSTARTLINE | 0x0) ;					// ok
