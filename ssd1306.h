@@ -175,4 +175,4 @@ void	ssd1306PutString(const char *) ;
 
 int32_t ssd1306Diagnostics(void) ;
 int32_t ssd1306Identify(uint8_t eChan, uint8_t addr) ;
-void	ssd1306Report(int32_t Handle) ;
+void	ssd1306Report(void) ;

@@ -302,7 +302,7 @@ int32_t	ssd1306Identify(uint8_t eChan, uint8_t Addr) {
 	return erSUCCESS ;
 }
 
-void	ssd1306Report(int32_t Handle) {
-	xdprintf(Handle, "SSD1306: segment:%d max_seg:%d page:%d max_page:%d\n",
+void	ssd1306Report(void) {
+	xprintf("SSD1306: segment:%d max_seg:%d page:%d max_page:%d\n",
 			sSSD1306.segment, sSSD1306.max_seg, sSSD1306.page, sSSD1306.max_page) ;
 }
