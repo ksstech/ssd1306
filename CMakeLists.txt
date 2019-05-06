@@ -1,0 +1,5 @@
+set(COMPONENT_SRCS "ssd1306.c" "ssd1306_fonts.c")
+set(COMPONENT_ADD_INCLUDEDIRS)
+set(COMPONENT_REQUIRES)
+set(COMPONENT_PRIV_REQUIRES)
+register_component()
