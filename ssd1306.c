@@ -4,6 +4,7 @@
  */
 
 #include	"ssd1306.h"
+#include	"x_printf.h"
 #include	"x_errors_events.h"
 #include	"x_definitions.h"
 #include	"x_systiming.h"
