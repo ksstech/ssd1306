@@ -4,7 +4,7 @@
  */
 
 #include	"ssd1306.h"
-#include	"x_printf.h"
+#include	"x_syslog.h"
 #include	"x_errors_events.h"
 #include	"x_definitions.h"
 #include	"x_systiming.h"
@@ -237,7 +237,7 @@ int		ssd1306PutChar(int cChr) {
 void	ssd1306PutString(const char * pString) { while(*pString) ssd1306PutChar(*pString++) ; }
 
 int32_t ssd1306Diagnostics() {
-	PRINT("ssd1306: Filling screen\n") ;
+	SL_DBG("ssd1306: Filling screen\n") ;
 	ssd1306SetTextCursor(0, 0) ; ssd1306PutString("|00000000|") ;
 	ssd1306SetTextCursor(0, 1) ; ssd1306PutString("+11111111+") ;
 	ssd1306SetTextCursor(0, 2) ; ssd1306PutString("=22222222=") ;
@@ -245,7 +245,7 @@ int32_t ssd1306Diagnostics() {
 	ssd1306SetTextCursor(0, 4) ; ssd1306PutString("{44444444}") ;
 	ssd1306SetTextCursor(0, 5) ; ssd1306PutString("(55555555)") ;
 
-	PRINT("ssd1306: Writing bars\n") ;
+	SL_DBG("ssd1306: Writing bars\n") ;
 	uint8_t cBuf[1+LCD_WIDTH] ;
 	ssd1306SetTextCursor(0, 0) ;
 	cBuf[0]	= 0x40 ;								// sending data
@@ -267,7 +267,7 @@ int32_t ssd1306Diagnostics() {
 	memset(&cBuf[1], 0x11, LCD_WIDTH) ;
 	halI2C_Write(&sSSD1306.sI2Cdev, cBuf, sizeof(cBuf)) ;
 
-	PRINT("ssd1306: Clearing the screen\n") ;
+	SL_DBG("ssd1306: Clearing the screen\n") ;
 	ssd1306Clear() ;
 	ssd1306SetPageAddr(0) ;
 	ssd1306SetSegmentAddr(0) ;
