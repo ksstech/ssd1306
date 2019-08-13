@@ -3,20 +3,24 @@
  * https://github.com/wtfuzz/ssd1306_text
  */
 
-#include	"ssd1306.h"
 #include	"x_syslog.h"
 #include	"x_errors_events.h"
 #include	"x_definitions.h"
 #include	"x_systiming.h"
 
+#include	"hal_debug.h"
+#include	"ssd1306.h"
+
 #include	<string.h>
 
-#define	debugFLAG					0x0002
+#define	debugFLAG					0x4000
 
 #define	debugCMDS					(debugFLAG & 0x0001)
-#define	debugPARAM					(debugFLAG & 0x0002)
 #define	debugTIMING					(debugFLAG & 0x0004)
 #define	debugCONTRAST				(debugFLAG & 0x0008)
+
+#define	debugPARAM					(debugFLAG & 0x4000)
+#define	debugRESULT					(debugFLAG & 0x8000)
 
 // ################################ private static variables ######################################
 
@@ -304,6 +308,6 @@ int32_t	ssd1306Identify(uint8_t eChan, uint8_t Addr) {
 }
 
 void	ssd1306Report(void) {
-	printfx("SSD1306: segment:%d max_seg:%d page:%d max_page:%d\n",
+	PRINT("SSD1306: segment:%d max_seg:%d page:%d max_page:%d\n",
 			sSSD1306.segment, sSSD1306.max_seg, sSSD1306.page, sSSD1306.max_page) ;
 }
