@@ -1,5 +1,5 @@
-set(COMPONENT_SRCS "ssd1306.c")
-set(COMPONENT_ADD_INCLUDEDIRS)
-set(COMPONENT_REQUIRES)
-set(COMPONENT_PRIV_REQUIRES)
-register_component()
+idf_component_register(	SRCS ssd1306.c 
+						INCLUDE_DIRS . 
+						REQUIRES
+						PRIV_REQUIRES fonts endpoints syslog printf common systiming hal_esp32
+						)

@@ -10,16 +10,18 @@
  * 							Removed duplicate definitions
  */
 
+#include	"ssd1306.h"
+#include	"fonts.h"
+#include	"endpoint_id.h"
+
 #include	"x_syslog.h"
+#include	"x_printf.h"
 #include	"x_errors_events.h"
 #include	"x_definitions.h"
 #include	"x_systiming.h"
 
 #include	"hal_debug.h"
 #include	"hal_i2c.h"
-
-#include	"ssd1306.h"
-#include	"fonts/fonts.h"
 
 #include	<string.h>
 
