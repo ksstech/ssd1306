@@ -14,11 +14,11 @@
 #include	"fonts.h"
 #include	"endpoint_id.h"
 
-#include	"x_syslog.h"
-#include	"x_printf.h"
+#include	"syslog.h"
+#include	"printfx.h"
 #include	"x_errors_events.h"
 #include	"x_definitions.h"
-#include	"x_systiming.h"
+#include	"systiming.h"
 
 #include	"hal_debug.h"
 #include	"hal_i2c.h"
