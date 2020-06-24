@@ -21,7 +21,6 @@
 #include	"systiming.h"
 
 #include	"hal_debug.h"
-#include	"hal_i2c.h"
 
 #include	<string.h>
 
@@ -125,16 +124,19 @@
 
 #define ssd1306EXTERNALVCC							0x01
 #define ssd1306SWITCHCAPVCC							0x02
+
 // ####################################### structures ##############################################
 
-typedef struct _ssd1306 {
-	halI2Cdev_t	sI2Cdev ;
+typedef struct __attribute__((packed)) ssd1306_s {
+	i2c_dev_info_t *psI2C ;								// size = 4
+	epid_t		epid ;									// size = 4
 	uint8_t		mem_mode ;
 	uint8_t		segment ;								// pixel horizontal
 	uint8_t		max_seg ;
 	uint8_t		page ;
 	uint8_t		max_page ;
 } ssd1306_t ;
+DUMB_STATIC_ASSERT(sizeof(ssd1306_t) == 13) ;
 
 // ################################ private static variables ######################################
 
@@ -151,7 +153,7 @@ void	ssd1306SendCommand_1(uint8_t Cmd1) {
 	uint8_t cBuf[2] ;
 	cBuf[0]	= 0x00 ;									// command following
 	cBuf[1]	= Cmd1 ;
-	halI2C_Write(&sSSD1306.sI2Cdev, cBuf, sizeof(cBuf)) ;
+	halI2C_Write(sSSD1306.psI2C, cBuf, sizeof(cBuf)) ;
 }
 
 void	ssd1306SendCommand_2(uint8_t Cmd1, uint8_t Cmd2) {
@@ -159,7 +161,7 @@ void	ssd1306SendCommand_2(uint8_t Cmd1, uint8_t Cmd2) {
 	cBuf[0]	= 0x00 ;									// commands following
 	cBuf[1]	= Cmd1 ;
 	cBuf[2]	= Cmd2 ;
-	halI2C_Write(&sSSD1306.sI2Cdev, cBuf, sizeof(cBuf)) ;
+	halI2C_Write(sSSD1306.psI2C, cBuf, sizeof(cBuf)) ;
 }
 
 void	ssd1306SendCommand_3(uint8_t Cmd1, uint8_t Cmd2, uint8_t Cmd3) {
@@ -168,12 +170,12 @@ void	ssd1306SendCommand_3(uint8_t Cmd1, uint8_t Cmd2, uint8_t Cmd3) {
 	cBuf[1]	= Cmd1 ;
 	cBuf[2]	= Cmd2 ;
 	cBuf[3]	= Cmd3 ;
-	halI2C_Write(&sSSD1306.sI2Cdev, cBuf, sizeof(cBuf)) ;
+	halI2C_Write(sSSD1306.psI2C, cBuf, sizeof(cBuf)) ;
 }
 
 uint8_t	ssd1306GetStatus() {
 	uint8_t ssd1306Status ;
-	halI2C_Read(&sSSD1306.sI2Cdev, &ssd1306Status, sizeof(ssd1306Status)) ;
+	halI2C_Read(sSSD1306.psI2C, &ssd1306Status, sizeof(ssd1306Status)) ;
 	return ssd1306Status ;
 }
 
@@ -283,16 +285,63 @@ void 	ssd1306Clear(void) {
 	cBuf[0]	= 0x40 ;									// writing data
 	for(int32_t i = 0; i < LCD_LINES; i += LINES) {
 		ssd1306SetTextCursor(0, i) ;
-		halI2C_Write(&sSSD1306.sI2Cdev, cBuf, sizeof(cBuf)) ;
+		halI2C_Write(sSSD1306.psI2C, cBuf, sizeof(cBuf)) ;
 	}
 	ssd1306SetTextCursor(0, 0) ;
 	IF_EXEC_1(debugTIMING, xSysTimerStop, systimerSSD1306) ;
 }
 
 /**
- * ssd1306Init() - initialise the controller
+ * @brief Write a single character at the current cursor position
+ *
+ * Using vertical addressing mode, we can have the hardware
+ * automatically move to the next column after writing 7 pixels
+ * in each page (rows).
  */
-void	ssd1306Init(void) {
+int		ssd1306PutChar(int cChr) {
+	if ((sSSD1306.epid.devclass != devSSD1306) || (sSSD1306.epid.subclass != subDSP64X48)) {
+		return cChr ;
+	}
+	IF_EXEC_1(debugTIMING, xSysTimerStart, systimerSSD1306_2) ;
+	const char * pFont = &font5X7[cChr * (ssd1306FONT_WIDTH - 1)] ;
+	uint8_t	cBuf[ssd1306FONT_WIDTH + 1 ] ;
+	int32_t	i ;
+	IF_PRINT(debugCMDS,"%c : %02x-%02x-%02x-%02x-%02x\n", cChr, *pFont, *(pFont+1), *(pFont+2), *(pFont+3), *(pFont+4)) ;
+
+	cBuf[0]	= 0x40 ;											// data following
+	for(i = 1; i < ssd1306FONT_WIDTH; cBuf[i++] = *pFont++) ;	// copy font bitmap across
+	cBuf[i]	= 0x00 ;											// do the blank separating segment
+	halI2C_Write(sSSD1306.psI2C, cBuf, sizeof(cBuf)) ;		// send the character
+
+	// update the cursor location
+	sSSD1306.segment	+= ssd1306FONT_WIDTH ;
+	if (sSSD1306.segment >= (sSSD1306.max_seg - LCD_SPARE_PIXELS)) {
+		++sSSD1306.page ;
+		if (sSSD1306.page == sSSD1306.max_page) {
+			sSSD1306.page = 0 ;
+		}
+		ssd1306SetPageAddr(sSSD1306.page) ;
+		ssd1306SetSegmentAddr(0) ;
+	}
+	IF_EXEC_1(debugTIMING, xSysTimerStop, systimerSSD1306_2) ;
+	return cChr ;
+}
+
+void	ssd1306PutString(const char * pString) { while(*pString) ssd1306PutChar(*pString++) ; }
+
+int32_t	ssd1306Identify(i2c_dev_info_t * psI2C_DI) {
+	psI2C_DI->Delay	= pdMS_TO_TICKS(100) ;
+	sSSD1306.psI2C	= psI2C_DI ;
+	uint8_t ssd1306Status = ssd1306GetStatus();			// detect & verify existence.
+	if ((ssd1306Status & 0x03) != 0x03)				return erFAILURE ;
+	sSSD1306.epid.devclass	= devSSD1306 ;				// valid device signature found
+	sSSD1306.epid.subclass	= subDSP64X48 ;
+	sSSD1306.epid.epuri		= URI_UNKNOWN ;
+	sSSD1306.epid.epunit	= UNIT_UNKNOWN ;
+	return erSUCCESS ;
+}
+
+int32_t	ssd1306Config(i2c_dev_info_t * psI2C_DI) {
 	IF_SYSTIMER_INIT(debugTIMING, systimerSSD1306, systimerCLOCKS, "SSD1306", myMS_TO_CLOCKS(2), myMS_TO_CLOCKS(15)) ;
 	ssd1306SendCommand_2(ssd1306SETMULTIPLEX, LCD_HEIGHT-1) ;
 	ssd1306SetOffset(0) ;
@@ -316,47 +365,10 @@ void	ssd1306Init(void) {
 	ssd1306SetDisplayState(1) ;
 
 	ssd1306Clear() ;
+	return erSUCCESS ;
 }
 
-/**
- * @brief Write a single character at the current cursor position
- *
- * Using vertical addressing mode, we can have the hardware
- * automatically move to the next column after writing 7 pixels
- * in each page (rows).
- */
-int		ssd1306PutChar(int cChr) {
-	if ((sSSD1306.sI2Cdev.epidI2C.devclass != devSSD1306) || (sSSD1306.sI2Cdev.epidI2C.subclass != subDSP64X48)) {
-		return cChr ;
-	}
-	IF_EXEC_1(debugTIMING, xSysTimerStart, systimerSSD1306_2) ;
-	const char * pFont = &font5X7[cChr * (ssd1306FONT_WIDTH - 1)] ;
-	uint8_t	cBuf[ssd1306FONT_WIDTH + 1 ] ;
-	int32_t	i ;
-	IF_PRINT(debugCMDS,"%c : %02x-%02x-%02x-%02x-%02x\n", cChr, *pFont, *(pFont+1), *(pFont+2), *(pFont+3), *(pFont+4)) ;
-
-	cBuf[0]	= 0x40 ;											// data following
-	for(i = 1; i < ssd1306FONT_WIDTH; cBuf[i++] = *pFont++) ;	// copy font bitmap across
-	cBuf[i]	= 0x00 ;											// do the blank separating segment
-	halI2C_Write(&sSSD1306.sI2Cdev, cBuf, sizeof(cBuf)) ;		// send the character
-
-	// update the cursor location
-	sSSD1306.segment	+= ssd1306FONT_WIDTH ;
-	if (sSSD1306.segment >= (sSSD1306.max_seg - LCD_SPARE_PIXELS)) {
-		++sSSD1306.page ;
-		if (sSSD1306.page == sSSD1306.max_page) {
-			sSSD1306.page = 0 ;
-		}
-		ssd1306SetPageAddr(sSSD1306.page) ;
-		ssd1306SetSegmentAddr(0) ;
-	}
-	IF_EXEC_1(debugTIMING, xSysTimerStop, systimerSSD1306_2) ;
-	return cChr ;
-}
-
-void	ssd1306PutString(const char * pString) { while(*pString) ssd1306PutChar(*pString++) ; }
-
-int32_t ssd1306Diagnostics() {
+int32_t ssd1306Diagnostics(i2c_dev_info_t * psI2C_DI) {
 	SL_DBG("ssd1306: Filling screen\n") ;
 	ssd1306SetTextCursor(0, 0) ; ssd1306PutString("|00000000|") ;
 	ssd1306SetTextCursor(0, 1) ; ssd1306PutString("+11111111+") ;
@@ -370,22 +382,22 @@ int32_t ssd1306Diagnostics() {
 	ssd1306SetTextCursor(0, 0) ;
 	cBuf[0]	= 0x40 ;								// sending data
 	memset(&cBuf[1], 0x88, LCD_WIDTH) ;
-	halI2C_Write(&sSSD1306.sI2Cdev, cBuf, sizeof(cBuf)) ;
+	halI2C_Write(sSSD1306.psI2C, cBuf, sizeof(cBuf)) ;
 
 	memset(&cBuf[1], 0xCC, LCD_WIDTH) ;
-	halI2C_Write(&sSSD1306.sI2Cdev, cBuf, sizeof(cBuf)) ;
+	halI2C_Write(sSSD1306.psI2C, cBuf, sizeof(cBuf)) ;
 
 	memset(&cBuf[1], 0xEE, LCD_WIDTH) ;
-	halI2C_Write(&sSSD1306.sI2Cdev, cBuf, sizeof(cBuf)) ;
+	halI2C_Write(sSSD1306.psI2C, cBuf, sizeof(cBuf)) ;
 
 	memset(&cBuf[1], 0x77, LCD_WIDTH) ;
-	halI2C_Write(&sSSD1306.sI2Cdev, cBuf, sizeof(cBuf)) ;
+	halI2C_Write(sSSD1306.psI2C, cBuf, sizeof(cBuf)) ;
 
 	memset(&cBuf[1], 0x33, LCD_WIDTH) ;
-	halI2C_Write(&sSSD1306.sI2Cdev, cBuf, sizeof(cBuf)) ;
+	halI2C_Write(sSSD1306.psI2C, cBuf, sizeof(cBuf)) ;
 
 	memset(&cBuf[1], 0x11, LCD_WIDTH) ;
-	halI2C_Write(&sSSD1306.sI2Cdev, cBuf, sizeof(cBuf)) ;
+	halI2C_Write(sSSD1306.psI2C, cBuf, sizeof(cBuf)) ;
 
 	SL_DBG("ssd1306: Clearing the screen\n") ;
 	ssd1306Clear() ;
@@ -395,31 +407,6 @@ int32_t ssd1306Diagnostics() {
 	return erSUCCESS ;
 }
 
-int32_t	ssd1306Identify(uint8_t eChan, uint8_t Addr) {
-	sSSD1306.sI2Cdev.chanI2C	= eChan ;
-	sSSD1306.sI2Cdev.addrI2C	= Addr ;
-	sSSD1306.sI2Cdev.dlayI2C	= pdMS_TO_TICKS(100) ;
-
-	// detect & verify existence.
-	uint8_t ssd1306Status = ssd1306GetStatus();
-	IF_PRINT(debugCMDS, "ssd1306 Chan=%d Addr=%d Status = 0x%02x\n", eChan, Addr, ssd1306Status) ;
-
-	// valid device signature not found
-	if ((ssd1306Status & 0x03) != 0x03) {
-		sSSD1306.sI2Cdev.chanI2C = sSSD1306.sI2Cdev.addrI2C	= sSSD1306.sI2Cdev.dlayI2C	= 0 ;
-		return erFAILURE ;
-	}
-
-	// valid device signature found
-	sSSD1306.sI2Cdev.epidI2C.devclass	= devSSD1306 ;
-	sSSD1306.sI2Cdev.epidI2C.subclass	= subDSP64X48 ;
-	sSSD1306.sI2Cdev.epidI2C.epuri		= URI_UNKNOWN ;
-	sSSD1306.sI2Cdev.epidI2C.epunit	= UNIT_UNKNOWN ;
-	ssd1306Init() ;
-	return erSUCCESS ;
-}
-
 void	ssd1306Report(void) {
-	PRINT("SSD1306: segment:%d max_seg:%d page:%d max_page:%d\n",
-			sSSD1306.segment, sSSD1306.max_seg, sSSD1306.page, sSSD1306.max_page) ;
+	PRINT("SSD1306: Seg:%d maxS:%d Page:%d maxP:%d\n", sSSD1306.segment, sSSD1306.max_seg, sSSD1306.page, sSSD1306.max_page) ;
 }

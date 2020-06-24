@@ -4,7 +4,7 @@
 
 #pragma	once
 
-#include	<stdint.h>
+#include	"hal_i2c.h"
 
 // ##################################### MACRO definitions #########################################
 
@@ -22,6 +22,8 @@ void	ssd1306SetTextCursor(uint8_t X, uint8_t Y) ;
 int		ssd1306PutChar(int cChr) ;
 void	ssd1306PutString(const char *) ;
 
-int32_t ssd1306Diagnostics(void) ;
-int32_t ssd1306Identify(uint8_t eChan, uint8_t addr) ;
+int32_t ssd1306Identify(i2c_dev_info_t * psI2C_DI) ;
+int32_t ssd1306Config(i2c_dev_info_t * psI2C_DI) ;
+int32_t ssd1306Diagnostics(i2c_dev_info_t * psI2C_DI) ;
+
 void	ssd1306Report(void) ;
