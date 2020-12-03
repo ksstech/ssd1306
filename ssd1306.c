@@ -14,8 +14,8 @@
 #include	"fonts.h"
 #include	"endpoint_id.h"
 
+#include	"printfx.h"									// +x_definitions +stdarg +stdint +stdio
 #include	"syslog.h"
-#include	"printfx.h"
 #include	"x_errors_events.h"
 #include	"x_definitions.h"
 #include	"systiming.h"
