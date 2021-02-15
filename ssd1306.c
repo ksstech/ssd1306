@@ -320,7 +320,7 @@ int32_t	ssd1306Identify(i2c_dev_info_t * psI2C_DI) {
 	psI2C_DI->Delay	= pdMS_TO_TICKS(100) ;
 	sSSD1306.psI2C	= psI2C_DI ;
 	ssd1306GetStatus();									// detect & verify existence.
-	IF_SL_DBG(debugTRACK, "Status=0x%02X", sSSD1306.status) ;
+	IF_SL_INFO(debugTRACK, "Status=0x%02X", sSSD1306.status) ;
 	if ((sSSD1306.status & 0x03) != 0x03)
 		return erFAILURE ;
 	psI2C_DI->Type			= i2cDEV_SSD1306 ;
@@ -360,7 +360,7 @@ int32_t	ssd1306Config(i2c_dev_info_t * psI2C_DI) {
 }
 
 int32_t ssd1306Diagnostics(i2c_dev_info_t * psI2C_DI) {
-	SL_DBG("ssd1306: Filling screen\n") ;
+	SL_INFO("ssd1306: Filling screen\n") ;
 	ssd1306SetTextCursor(0, 0) ; ssd1306PutString("|00000000|") ;
 	ssd1306SetTextCursor(0, 1) ; ssd1306PutString("+11111111+") ;
 	ssd1306SetTextCursor(0, 2) ; ssd1306PutString("=22222222=") ;
@@ -368,7 +368,7 @@ int32_t ssd1306Diagnostics(i2c_dev_info_t * psI2C_DI) {
 	ssd1306SetTextCursor(0, 4) ; ssd1306PutString("{44444444}") ;
 	ssd1306SetTextCursor(0, 5) ; ssd1306PutString("(55555555)") ;
 
-	SL_DBG("ssd1306: Writing bars\n") ;
+	SL_INFO("ssd1306: Writing bars\n") ;
 	uint8_t cBuf[1+LCD_WIDTH] ;
 	ssd1306SetTextCursor(0, 0) ;
 	cBuf[0]	= 0x40 ;								// sending data
@@ -390,7 +390,7 @@ int32_t ssd1306Diagnostics(i2c_dev_info_t * psI2C_DI) {
 	memset(&cBuf[1], 0x11, LCD_WIDTH) ;
 	halI2C_Write(sSSD1306.psI2C, cBuf, sizeof(cBuf)) ;
 
-	SL_DBG("ssd1306: Clearing the screen\n") ;
+	SL_INFO("ssd1306: Clearing the screen\n") ;
 	ssd1306Clear() ;
 	ssd1306SetPageAddr(0) ;
 	ssd1306SetSegmentAddr(0) ;
