@@ -19,7 +19,6 @@
 #include	"x_errors_events.h"
 #include	"x_definitions.h"
 #include	"systiming.h"
-#include	"hal_timer.h"
 
 #include	<string.h>
 
