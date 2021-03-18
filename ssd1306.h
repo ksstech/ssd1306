@@ -4,7 +4,9 @@
 
 #pragma	once
 
+#include	"endpoint_struct.h"
 #include	"hal_i2c.h"
+
 #include	<stdint.h>
 
 // ##################################### BUILD definitions #########################################
