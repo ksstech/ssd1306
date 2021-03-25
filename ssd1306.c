@@ -398,5 +398,5 @@ int32_t ssd1306Diagnostics(i2c_dev_info_t * psI2C_DI) {
 }
 
 void	ssd1306Report(void) {
-	PRINT("SSD1306: Seg:%d maxS:%d Page:%d maxP:%d\n", sSSD1306.segment, sSSD1306.max_seg, sSSD1306.page, sSSD1306.max_page) ;
+	printfx("SSD1306: Seg:%d maxS:%d Page:%d maxP:%d\n", sSSD1306.segment, sSSD1306.max_seg, sSSD1306.page, sSSD1306.max_page) ;
 }
