@@ -323,9 +323,8 @@ int	ssd1306PutChar(int cChr) {
 void ssd1306PutString(const char * pString) { while(*pString) ssd1306PutChar(*pString++) ; }
 
 /**
- * ssd1306ConfigMode() --  configure device functionality
- *
- * mode	/ssd1306 MinBright MaxBright BlankTime
+ * @brief	configure SSD1306 functionality
+ * @brief	mode /ssd1306 P0=MinBright P1=MaxBright P2=BlankTime
  **/
 int	ssd1306ConfigMode(rule_t * psRule) {
 	uint8_t	AI = psRule->ActIdx ;
