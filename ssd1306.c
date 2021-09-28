@@ -364,8 +364,8 @@ int	ssd1306Identify(i2c_di_t * psI2C_DI) {
 }
 
 int	ssd1306Config(i2c_di_t * psI2C_DI) {
-	IF_SYSTIMER_INIT(debugTIMING, stSSD1306A, stMICROS, "SSD1306a", 2, 15) ;
-	IF_SYSTIMER_INIT(debugTIMING, stSSD1306B, stMICROS, "SSD1306b", 2, 15) ;
+	IF_SYSTIMER_INIT(debugTIMING, stSSD1306A, stMICROS, "SSD1306a", 1500, 15000) ;
+	IF_SYSTIMER_INIT(debugTIMING, stSSD1306B, stMICROS, "SSD1306b", 300, 3000) ;
 	ssd1306ReConfig(psI2C_DI) ;
 	return erSUCCESS ;
 }
