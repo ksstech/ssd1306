@@ -328,10 +328,11 @@ void ssd1306PutString(const char * pString) { while(*pString) ssd1306PutChar(*pS
  **/
 int	ssd1306ConfigMode(rule_t * psRule) {
 	uint8_t	AI = psRule->ActIdx ;
-	uint32_t P0 = psRule->para.u32[AI][0] ;
-	uint32_t P1 = psRule->para.u32[AI][1] ;
-	uint32_t P2 = psRule->para.u32[AI][2] ;
-	IF_PRINT(debugMODE, "ssd1306  P0=%d  P1=%d  P2=%d\n", P0, P1, P2) ;
+	uint32_t P0 = psRule->para.x32[AI][0].u32 ;
+	uint32_t P1 = psRule->para.x32[AI][1].u32 ;
+	uint32_t P2 = psRule->para.x32[AI][2].u32 ;
+	IF_PRINT(debugTRACK && ioB1GET(ioMode), "ssd1306 ap0=%d ap1=%d P0=%d P1=%d P2=%d\n",
+											psRule->actPar0, psRule->actPar1, P0, P1, P2) ;
 	int iRV ;
 	if ((P0 < P1) && (P1 <= 255) && (P2 <= 255)) {
 		sSSD1306.MinContrast	= P0 ;
