@@ -423,9 +423,8 @@ int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
 	ssd1306Clear() ;
 	ssd1306SetPageAddr(0) ;
 	ssd1306SetSegmentAddr(0) ;
-	for(int i = 0; i < (LCD_COLUMNS * LCD_LINES); i++) {
-		ssd1306PutChar(i + CHR_SPACE) ;
-	}
+	for(int i = 0; i < (LCD_COLUMNS * LCD_LINES); i++)
+		ssd1306PutChar(i + CHR_SPACE);
 	return erSUCCESS ;
 }
 
