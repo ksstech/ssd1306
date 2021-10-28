@@ -53,7 +53,7 @@ void ssd1306SetTextCursor(uint8_t X, uint8_t Y) ;
 int	ssd1306PutChar(int cChr) ;
 void ssd1306PutString(const char *) ;
 
-int	ssd1306ConfigMode(rule_t * psRule) ;
+int	ssd1306ConfigMode(rule_t * psR) ;
 
 int ssd1306Identify(i2c_di_t * psI2C_DI) ;
 int ssd1306Config(i2c_di_t * psI2C_DI) ;
