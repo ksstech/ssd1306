@@ -389,7 +389,7 @@ void ssd1306ReConfig(i2c_di_t * psI2C_DI) {
 }
 
 int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
-	SL_INFO("ssd1306: Filling screen\n") ;
+	SL_DBG("ssd1306: Filling screen\n") ;
 	ssd1306SetTextCursor(0, 0) ; ssd1306PutString("|00000000|") ;
 	ssd1306SetTextCursor(0, 1) ; ssd1306PutString("+11111111+") ;
 	ssd1306SetTextCursor(0, 2) ; ssd1306PutString("=22222222=") ;
@@ -397,7 +397,7 @@ int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
 	ssd1306SetTextCursor(0, 4) ; ssd1306PutString("{44444444}") ;
 	ssd1306SetTextCursor(0, 5) ; ssd1306PutString("(55555555)") ;
 
-	SL_INFO("ssd1306: Writing bars\n") ;
+	SL_DBG("ssd1306: Writing bars\n") ;
 	uint8_t cBuf[1+LCD_WIDTH] ;
 	ssd1306SetTextCursor(0, 0) ;
 	cBuf[0]	= 0x40 ;								// sending data
@@ -419,7 +419,7 @@ int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
 	memset(&cBuf[1], 0x11, LCD_WIDTH) ;
 	ssd1306I2C_IO(cBuf, sizeof(cBuf)) ;
 
-	SL_INFO("ssd1306: Clearing the screen\n") ;
+	SL_DBG("ssd1306: Clearing the screen\n") ;
 	ssd1306Clear() ;
 	ssd1306SetPageAddr(0) ;
 	ssd1306SetSegmentAddr(0) ;
