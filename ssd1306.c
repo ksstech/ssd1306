@@ -339,11 +339,8 @@ int	ssd1306ConfigMode(rule_t * psR) {
 		sSSD1306.MaxContrast	= P1 ;
 		sSSD1306.tBlank 		= P2 ;
 		iRV = erSUCCESS ;
-	} else {
-		SET_ERRINFO("Invalid Min/Max Contrast or Blank") ;
-		iRV = erSCRIPT_INV_PARA ;
-	}
-	// XXX Add support for enabling and disabling M90E26 info display
+	} else
+		ERR_INFO_MC("Invalid Min/Max Contrast or Blank", erSCRIPT_INV_PARA);
 	return iRV ;
 }
 
