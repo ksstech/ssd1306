@@ -10,6 +10,14 @@
 
 #include	<stdint.h>
 
+/*	Wemos 0.96" OLED
+ 	D3	IO17	BtnA default	M90E26 CS1 conflict
+ 	D4	IO16	BtnB default
+ 	D5	IO18					M90E26 SCLK
+ 	D6	IO19					M90E26 MISO
+ 	D7	IO23					M90E26 MOSI
+ */
+
 // ##################################### BUILD definitions #########################################
 
 
