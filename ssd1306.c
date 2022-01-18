@@ -345,8 +345,8 @@ int	ssd1306ConfigMode(rule_t * psR) {
 }
 
 int	ssd1306Identify(i2c_di_t * psI2C_DI) {
-	psI2C_DI->Delay	= 10;
-	psI2C_DI->TOuS = 400;			// Max 13000 (13mS)
+	psI2C_DI->TRXmS	= 10;
+	psI2C_DI->CLKuS = 400;			// Max 13000 (13mS)
 	psI2C_DI->Test	= 1;
 	sSSD1306.psI2C	= psI2C_DI ;
 	ssd1306GetStatus();									// detect & verify existence.
