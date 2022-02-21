@@ -340,7 +340,7 @@ int	ssd1306ConfigMode(rule_t * psR) {
 		sSSD1306.tBlank 		= P2 ;
 		iRV = erSUCCESS ;
 	} else
-		ERR_INFO_MC("Invalid Min/Max Contrast or Blank", erSCRIPT_INV_PARA);
+		ERR_INFO_MC("Invalid Min/Max Contrast or Blank", erINVALID_PARA);
 	return iRV ;
 }
 
