@@ -247,7 +247,7 @@ int	ssd1306SetContrast(uint8_t Contrast) {
 	uint8_t NewVcom = RelContrast < 0x06 ? 0x00 : RelContrast < 0x0B ? 0x20 : 0x30 ;
 	ssd1306SendCommand_2(ssd1306SETVCOMDESELECT, NewVcom) ;
 	ssd1306SetDisplayState(Contrast == 0 ? 0 : 1) ;		// switch display off/on
-	IF_PRINT(debugCONTRAST, "Contrast=0x%02X  PreCharge=0x%02X  Vcom=0x%02X\n", Contrast, PreCharge, NewVcom) ;
+	IF_P(debugCONTRAST, "Contrast=0x%02X  PreCharge=0x%02X  Vcom=0x%02X\n", Contrast, PreCharge, NewVcom) ;
 	return Contrast ;
 }
 
@@ -300,7 +300,7 @@ int	ssd1306PutChar(int cChr) {
 	IF_EXEC_1(debugTIMING, xSysTimerStart, stSSD1306B) ;
 	const char * pFont = &font5X7[cChr * (ssd1306FONT_WIDTH - 1)] ;
 	uint8_t	cBuf[ssd1306FONT_WIDTH + 1 ] ;
-	IF_PRINT(debugCMDS,"%c : %02x-%02x-%02x-%02x-%02x\n", cChr, *pFont, *(pFont+1), *(pFont+2), *(pFont+3), *(pFont+4)) ;
+	IF_P(debugCMDS,"%c : %02x-%02x-%02x-%02x-%02x\n", cChr, *pFont, *(pFont+1), *(pFont+2), *(pFont+3), *(pFont+4)) ;
 
 	int	i = 0 ;
 	cBuf[i++] = 0x40 ;									// data following
@@ -331,7 +331,7 @@ int	ssd1306ConfigMode(rule_t * psR) {
 	uint32_t P0 = psR->para.x32[AI][0].u32 ;
 	uint32_t P1 = psR->para.x32[AI][1].u32 ;
 	uint32_t P2 = psR->para.x32[AI][2].u32 ;
-	IF_PRINT(debugTRACK && ioB1GET(ioMode), "ssd1306 ap0=%d ap1=%d P0=%d P1=%d P2=%d\n",
+	IF_P(debugTRACK && ioB1GET(ioMode), "ssd1306 ap0=%d ap1=%d P0=%d P1=%d P2=%d\n",
 											psR->actPar0, psR->actPar1, P0, P1, P2) ;
 	int iRV ;
 	if ((P0 < P1) && (P1 <= 255) && (P2 <= 255)) {
