@@ -333,15 +333,11 @@ int	ssd1306ConfigMode(rule_t * psR) {
 	uint32_t P2 = psR->para.x32[AI][2].u32 ;
 	IF_P(debugTRACK && ioB1GET(ioMode), "ssd1306 ap0=%d ap1=%d P0=%d P1=%d P2=%d\n",
 											psR->actPar0, psR->actPar1, P0, P1, P2) ;
-	int iRV ;
-	if ((P0 < P1) && (P1 <= 255) && (P2 <= 255)) {
-		sSSD1306.MinContrast	= P0 ;
-		sSSD1306.MaxContrast	= P1 ;
-		sSSD1306.tBlank 		= P2 ;
-		iRV = erSUCCESS ;
-	} else
-		ERR_INFO_MC("Invalid Min/Max Contrast or Blank", erINVALID_PARA);
-	return iRV ;
+	IF_RETURN_MX(P0 >= P1 || P1 > 255 || P2 > 255, "Invalid Min/Max Contrast or Blank", erINVALID_PARA);
+	sSSD1306.MinContrast = P0;
+	sSSD1306.MaxContrast = P1;
+	sSSD1306.tBlank = P2;
+	return erSUCCESS;
 }
 
 int	ssd1306Identify(i2c_di_t * psI2C_DI) {
