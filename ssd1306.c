@@ -47,10 +47,10 @@
 #define	LCD_TYPE_128_64				2
 #define	LCD_TYPE					LCD_TYPE_64_48
 
-#if		(LCD_TYPE == LCD_TYPE_64_48)
+#if	(LCD_TYPE == LCD_TYPE_64_48)
 	#define	LCD_WIDTH				64					// pixels horizontal
 	#define	LCD_HEIGHT				48					// pixels vertical
-#elif	(LCD_TYPE == LCD_TYPE_128_64)
+#elif(LCD_TYPE == LCD_TYPE_128_64)
 	#define	LCD_WIDTH				128					// pixels horizontal
 	#define	LCD_HEIGHT				64					// pixels vertical
 #else
@@ -234,14 +234,14 @@ int	ssd1306SetContrast(u8_t Contrast) {
  * 0xD0			0xD2	0xDD
  * 0xE0			0xE1	0xEE
  * 0xFF			0xF1 	0xFF	0x30 */
-#if 	0
 	u8_t RelContrast = Contrast >> 4 ;
+	#if 0
 	u8_t PreCharge = RelContrast == 0x00 ? 0x10 : RelContrast << 4 ;
 	PreCharge |= RelContrast  == 0x0F ? 0x01 : 0x0F - RelContrast ;
-#elif	1
+	#elif 1
 	u8_t PreCharge = RelContrast << 4 | RelContrast ;
 	PreCharge = PreCharge == 0x00 ? 0x11 : PreCharge ;
-#endif
+	#endif
 	ssd1306SendCommand_2(ssd1306SETPRECHARGE, PreCharge) ;
 	ssd1306SendCommand_2(ssd1306SETCONTRAST, Contrast) ;
 	u8_t NewVcom = RelContrast < 0x06 ? 0x00 : RelContrast < 0x0B ? 0x20 : 0x30 ;
@@ -324,7 +324,7 @@ void ssd1306PutString(const char * pString) { while(*pString) ssd1306PutChar(*pS
 
 /**
  * @brief	configure SSD1306 functionality
- * @brief	mode /ssd1306 P0=MinBright P1=MaxBright P2=BlankTime
+ * @brief	mode /ssd1306 idx P0=MinBright P1=MaxBright P2=BlankTime
  **/
 int	ssd1306ConfigMode(rule_t * psR) {
 	u8_t AI = psR->ActIdx ;
