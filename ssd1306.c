@@ -130,7 +130,7 @@ static ssd1306_t sSSD1306 = { .max_seg=LCD_WIDTH, .max_page=LCD_HEIGHT / ssd1306
 
 // ################################# private public variables #####################################
 
-static void	ssd1306I2C_IO(uint8_t * pBuf, uint8_t Size) {
+static void	ssd1306I2C_IO(u8_t * pBuf, u8_t Size) {
 	int iRV ;
 	if (Size == 1) {
 		iRV = halI2C_Queue(sSSD1306.psI2C, i2cR_B, NULL, 0, pBuf, Size, (i2cq_p1_t) NULL, (i2cq_p2_t) NULL) ;
@@ -144,23 +144,23 @@ static void	ssd1306I2C_IO(uint8_t * pBuf, uint8_t Size) {
  * ssd1306SendCommand_?() - send a single/dual/triple byte command(s) to the controller
  * @param	Cmd? - command(s) to send
  */
-void ssd1306SendCommand_1(uint8_t Cmd1) {
-	uint8_t cBuf[2] ;
+void ssd1306SendCommand_1(u8_t Cmd1) {
+	u8_t cBuf[2] ;
 	cBuf[0]	= 0x00 ;									// command following
 	cBuf[1]	= Cmd1 ;
 	ssd1306I2C_IO(cBuf, sizeof(cBuf)) ;
 }
 
-void ssd1306SendCommand_2(uint8_t Cmd1, uint8_t Cmd2) {
-	uint8_t cBuf[3] ;
+void ssd1306SendCommand_2(u8_t Cmd1, u8_t Cmd2) {
+	u8_t cBuf[3] ;
 	cBuf[0]	= 0x00 ;									// commands following
 	cBuf[1]	= Cmd1 ;
 	cBuf[2]	= Cmd2 ;
 	ssd1306I2C_IO(cBuf, sizeof(cBuf)) ;
 }
 
-void ssd1306SendCommand_3(uint8_t Cmd1, uint8_t Cmd2, uint8_t Cmd3) {
-	uint8_t cBuf[4] ;
+void ssd1306SendCommand_3(u8_t Cmd1, u8_t Cmd2, u8_t Cmd3) {
+	u8_t cBuf[4] ;
 	cBuf[0]	= 0x00 ;									// commands following
 	cBuf[1]	= Cmd1 ;
 	cBuf[2]	= Cmd2 ;
@@ -168,24 +168,24 @@ void ssd1306SendCommand_3(uint8_t Cmd1, uint8_t Cmd2, uint8_t Cmd3) {
 	ssd1306I2C_IO(cBuf, sizeof(cBuf)) ;
 }
 
-uint8_t	ssd1306GetStatus(void) {
+u8_t	ssd1306GetStatus(void) {
 	ssd1306I2C_IO(&sSSD1306.status, SO_MEM(ssd1306_t, status)) ;
 	return sSSD1306.status ;
 }
 
 /* Functions to configure the basic operation of the controller */
 
-void ssd1306SetDisplayState(uint8_t State) {
+void ssd1306SetDisplayState(u8_t State) {
 	IF_myASSERT(debugPARAM, State < 0x02) ;
 	ssd1306SendCommand_1(State ? ssd1306DISPLAYON : ssd1306DISPLAYOFF) ;
 }
 
-void ssd1306SetScrollState(uint8_t State) {
+void ssd1306SetScrollState(u8_t State) {
 	IF_myASSERT(debugPARAM, State < 0x02) ;
 	ssd1306SendCommand_1(State ? ssd1306SCROLL_ACTIVATE : ssd1306SCROLL_DEACTIVATE) ;
 }
 
-void ssd1306SetScanDirection(uint8_t State) {
+void ssd1306SetScanDirection(u8_t State) {
 	IF_myASSERT(debugPARAM, State < 0x02) ;
 	ssd1306SendCommand_1(State ? ssd1306COMSCANINC : ssd1306COMSCANDEC) ;
 }
@@ -193,7 +193,7 @@ void ssd1306SetScanDirection(uint8_t State) {
 /**
  *  @param	Mode = 0/horizontal  1/vertical  2/page
  */
-void ssd1306SetMemoryMode(uint8_t Mode) {
+void ssd1306SetMemoryMode(u8_t Mode) {
 	IF_myASSERT(debugPARAM, Mode < 0x03) ;
 	sSSD1306.mem_mode	= Mode ;
 	ssd1306SendCommand_2(ssd1306MEMORYMODE, Mode) ;
@@ -202,7 +202,7 @@ void ssd1306SetMemoryMode(uint8_t Mode) {
 /**
  * @param	Offset - 0->63 Pan up or down
  */
-void ssd1306SetOffset(uint8_t Offset) {
+void ssd1306SetOffset(u8_t Offset) {
 	IF_myASSERT(debugPARAM, Offset < SSD1306_MAX_COLUMN) ;
 	ssd1306SendCommand_2(ssd1306SETDISPLAYOFFSET, Offset) ;
 }
@@ -210,7 +210,7 @@ void ssd1306SetOffset(uint8_t Offset) {
 /**
  * @param	Contrast - 0->255 dim to bright
  */
-int	ssd1306SetContrast(uint8_t Contrast) {
+int	ssd1306SetContrast(u8_t Contrast) {
 	if (Contrast > sSSD1306.MaxContrast) {
 		Contrast = sSSD1306.MinContrast ;
 	} else if (Contrast < sSSD1306.MinContrast) {
@@ -234,43 +234,43 @@ int	ssd1306SetContrast(uint8_t Contrast) {
  * 0xD0			0xD2	0xDD
  * 0xE0			0xE1	0xEE
  * 0xFF			0xF1 	0xFF	0x30 */
-	uint8_t RelContrast = Contrast >> 4 ;
 #if 	0
-	uint8_t PreCharge = RelContrast == 0x00 ? 0x10 : RelContrast << 4 ;
+	u8_t RelContrast = Contrast >> 4 ;
+	u8_t PreCharge = RelContrast == 0x00 ? 0x10 : RelContrast << 4 ;
 	PreCharge |= RelContrast  == 0x0F ? 0x01 : 0x0F - RelContrast ;
 #elif	1
-	uint8_t PreCharge = RelContrast << 4 | RelContrast ;
+	u8_t PreCharge = RelContrast << 4 | RelContrast ;
 	PreCharge = PreCharge == 0x00 ? 0x11 : PreCharge ;
 #endif
 	ssd1306SendCommand_2(ssd1306SETPRECHARGE, PreCharge) ;
 	ssd1306SendCommand_2(ssd1306SETCONTRAST, Contrast) ;
-	uint8_t NewVcom = RelContrast < 0x06 ? 0x00 : RelContrast < 0x0B ? 0x20 : 0x30 ;
+	u8_t NewVcom = RelContrast < 0x06 ? 0x00 : RelContrast < 0x0B ? 0x20 : 0x30 ;
 	ssd1306SendCommand_2(ssd1306SETVCOMDESELECT, NewVcom) ;
 	ssd1306SetDisplayState(Contrast == 0 ? 0 : 1) ;		// switch display off/on
 	IF_P(debugCONTRAST, "Contrast=0x%02X  PreCharge=0x%02X  Vcom=0x%02X\n", Contrast, PreCharge, NewVcom) ;
 	return Contrast ;
 }
 
-void ssd1306SetInverse(uint8_t State) {
+void ssd1306SetInverse(u8_t State) {
 	IF_myASSERT(debugPARAM, State < 0x02) ;
 	ssd1306SendCommand_1(State ? ssd1306INVERTDISPLAY : ssd1306NORMALDISPLAY) ;
 }
 
 /* Functions to set the display graphics/pixel cursor and page position */
 
-void ssd1306SetSegmentAddr(uint8_t Segment) {
+void ssd1306SetSegmentAddr(u8_t Segment) {
 	sSSD1306.segment = (Segment < sSSD1306.max_seg) ? Segment : 0 ;
 	ssd1306SendCommand_3(ssd1306COLUMNADDR, Segment + ANOMALY_OFFSET, sSSD1306.max_seg + ANOMALY_OFFSET) ;
 }
 
-void ssd1306SetPageAddr(uint8_t Page) {
+void ssd1306SetPageAddr(u8_t Page) {
 	sSSD1306.page = Page < sSSD1306.max_page ? Page : 0 ;
 	ssd1306SendCommand_3(ssd1306PAGEADDR, Page, sSSD1306.max_page) ;
 }
 
 /* High level functions to control window/cursor/scrolling etc */
 
-void ssd1306SetTextCursor(uint8_t X, uint8_t Y) {
+void ssd1306SetTextCursor(u8_t X, u8_t Y) {
 	ssd1306SetPageAddr(Y) ;
 	ssd1306SetSegmentAddr(X * ssd1306FONT_WIDTH) ;
 }
@@ -278,7 +278,7 @@ void ssd1306SetTextCursor(uint8_t X, uint8_t Y) {
 void  ssd1306Clear(void) {
 	IF_EXEC_1(debugTIMING, xSysTimerStart, stSSD1306A) ;
 	#define LINES	3									// 1=14,129  2=12,033  3=11,338  6=10,645 uSec
-	uint8_t	cBuf[1+LCD_WIDTH*LINES] ;
+	u8_t	cBuf[1+LCD_WIDTH*LINES] ;
 	memset(cBuf, 0, sizeof(cBuf)) ;
 	cBuf[0]	= 0x40 ;									// writing data
 	for(int i = 0; i < LCD_LINES; i += LINES) {
@@ -299,7 +299,7 @@ void  ssd1306Clear(void) {
 int	ssd1306PutChar(int cChr) {
 	IF_EXEC_1(debugTIMING, xSysTimerStart, stSSD1306B) ;
 	const char * pFont = &font5X7[cChr * (ssd1306FONT_WIDTH - 1)] ;
-	uint8_t	cBuf[ssd1306FONT_WIDTH + 1 ] ;
+	u8_t	cBuf[ssd1306FONT_WIDTH + 1 ] ;
 	IF_P(debugCMDS,"%c : %02x-%02x-%02x-%02x-%02x\n", cChr, *pFont, *(pFont+1), *(pFont+2), *(pFont+3), *(pFont+4)) ;
 
 	int	i = 0 ;
@@ -327,10 +327,10 @@ void ssd1306PutString(const char * pString) { while(*pString) ssd1306PutChar(*pS
  * @brief	mode /ssd1306 P0=MinBright P1=MaxBright P2=BlankTime
  **/
 int	ssd1306ConfigMode(rule_t * psR) {
-	uint8_t	AI = psR->ActIdx ;
-	uint32_t P0 = psR->para.x32[AI][0].u32 ;
-	uint32_t P1 = psR->para.x32[AI][1].u32 ;
-	uint32_t P2 = psR->para.x32[AI][2].u32 ;
+	u8_t AI = psR->ActIdx ;
+	u32_t P0 = psR->para.x32[AI][0].u32 ;
+	u32_t P1 = psR->para.x32[AI][1].u32 ;
+	u32_t P2 = psR->para.x32[AI][2].u32 ;
 	IF_P(debugTRACK && ioB1GET(ioMode), "ssd1306 ap0=%d ap1=%d P0=%d P1=%d P2=%d\n",
 											psR->actPar0, psR->actPar1, P0, P1, P2) ;
 	IF_RETURN_MX(P0 >= P1 || P1 > 255 || P2 > 255, "Invalid Min/Max Contrast or Blank", erINVALID_PARA);
@@ -395,7 +395,7 @@ int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
 	ssd1306SetTextCursor(0, 5) ; ssd1306PutString("(55555555)") ;
 
 	SL_DBG("ssd1306: Writing bars\n") ;
-	uint8_t cBuf[1+LCD_WIDTH] ;
+	u8_t cBuf[1+LCD_WIDTH] ;
 	ssd1306SetTextCursor(0, 0) ;
 	cBuf[0]	= 0x40 ;								// sending data
 	memset(&cBuf[1], 0x88, LCD_WIDTH) ;
