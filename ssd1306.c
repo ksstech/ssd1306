@@ -247,7 +247,7 @@ int	ssd1306SetContrast(u8_t Contrast) {
 	u8_t NewVcom = RelContrast < 0x06 ? 0x00 : RelContrast < 0x0B ? 0x20 : 0x30 ;
 	ssd1306SendCommand_2(ssd1306SETVCOMDESELECT, NewVcom) ;
 	ssd1306SetDisplayState(Contrast == 0 ? 0 : 1) ;		// switch display off/on
-	IF_P(debugCONTRAST, "Contrast=0x%02X  PreCharge=0x%02X  Vcom=0x%02X\n", Contrast, PreCharge, NewVcom) ;
+	IF_P(debugCONTRAST, "Contrast=0x%02X  PreCharge=0x%02X  Vcom=0x%02X\r\n", Contrast, PreCharge, NewVcom) ;
 	return Contrast ;
 }
 
@@ -300,7 +300,7 @@ int	ssd1306PutChar(int cChr) {
 	IF_EXEC_1(debugTIMING, xSysTimerStart, stSSD1306B) ;
 	const char * pFont = &font5X7[cChr * (ssd1306FONT_WIDTH - 1)] ;
 	u8_t	cBuf[ssd1306FONT_WIDTH + 1 ] ;
-	IF_P(debugCMDS,"%c : %02x-%02x-%02x-%02x-%02x\n", cChr, *pFont, *(pFont+1), *(pFont+2), *(pFont+3), *(pFont+4)) ;
+	IF_P(debugCMDS,"%c : %02x-%02x-%02x-%02x-%02x\r\n", cChr, *pFont, *(pFont+1), *(pFont+2), *(pFont+3), *(pFont+4)) ;
 
 	int	i = 0 ;
 	cBuf[i++] = 0x40 ;									// data following
@@ -331,7 +331,7 @@ int	ssd1306ConfigMode(rule_t * psR) {
 	u32_t P0 = psR->para.x32[AI][0].u32 ;
 	u32_t P1 = psR->para.x32[AI][1].u32 ;
 	u32_t P2 = psR->para.x32[AI][2].u32 ;
-	IF_P(debugTRACK && ioB1GET(ioMode), "ssd1306 ap0=%d ap1=%d P0=%d P1=%d P2=%d\n",
+	IF_P(debugTRACK && ioB1GET(ioMode), "ssd1306 ap0=%d ap1=%d P0=%d P1=%d P2=%d\r\n",
 											psR->actPar0, psR->actPar1, P0, P1, P2) ;
 	IF_RETURN_MX(P0 >= P1 || P1 > 255 || P2 > 255, "Invalid Min/Max Contrast or Blank", erINVALID_PARA);
 	sSSD1306.MinContrast = P0;
@@ -386,7 +386,7 @@ void ssd1306ReConfig(i2c_di_t * psI2C_DI) {
 }
 
 int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
-	SL_DBG("ssd1306: Filling screen\n") ;
+	SL_DBG("ssd1306: Filling screen\r\n") ;
 	ssd1306SetTextCursor(0, 0) ; ssd1306PutString("|00000000|") ;
 	ssd1306SetTextCursor(0, 1) ; ssd1306PutString("+11111111+") ;
 	ssd1306SetTextCursor(0, 2) ; ssd1306PutString("=22222222=") ;
@@ -394,7 +394,7 @@ int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
 	ssd1306SetTextCursor(0, 4) ; ssd1306PutString("{44444444}") ;
 	ssd1306SetTextCursor(0, 5) ; ssd1306PutString("(55555555)") ;
 
-	SL_DBG("ssd1306: Writing bars\n") ;
+	SL_DBG("ssd1306: Writing bars\r\n") ;
 	u8_t cBuf[1+LCD_WIDTH] ;
 	ssd1306SetTextCursor(0, 0) ;
 	cBuf[0]	= 0x40 ;								// sending data
@@ -416,7 +416,7 @@ int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
 	memset(&cBuf[1], 0x11, LCD_WIDTH) ;
 	ssd1306I2C_IO(cBuf, sizeof(cBuf)) ;
 
-	SL_DBG("ssd1306: Clearing the screen\n") ;
+	SL_DBG("ssd1306: Clearing the screen\r\n") ;
 	ssd1306Clear() ;
 	ssd1306SetPageAddr(0) ;
 	ssd1306SetSegmentAddr(0) ;
@@ -426,6 +426,6 @@ int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
 }
 
 void ssd1306Report(void) {
-	printfx("SSD1306:  Seg:%d/%d  Page:%d/%d\n",
+	printfx("SSD1306:  Seg:%d/%d  Page:%d/%d\r\n",
 			sSSD1306.segment, sSSD1306.max_seg, sSSD1306.page, sSSD1306.max_page) ;
 }
