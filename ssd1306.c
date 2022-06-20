@@ -1,32 +1,18 @@
 /**
  * ssd1306.c
+ * Copyright (c) 2014-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
  * https://github.com/wtfuzz/ssd1306_text
- *
- *	Date		Ver			Comments/changes
- * 20180630		0.0.1.0		Initial version
- * 20181129		0.0.1.1		Enabled fade-in support
- * 20190105		0.0.1.2		Simplified API to support single SSD1306 device
- * 20200413		0.0.1.3		Uncoupled from fonts to facilitate ILI9341/ST7789V support
- * 							Removed duplicate definitions
  */
 
 #include	"hal_variables.h"
 #include	"ssd1306.h"
 #include	"fonts.h"
-
 #include	"printfx.h"									// +x_definitions +stdarg +stdint +stdio
 #include	"syslog.h"
 #include	"systiming.h"
-
 #include	"x_errors_events.h"
 
-#include	<string.h>
-
 #define	debugFLAG					0xF000
-
-#define	debugCMDS					(debugFLAG & 0x0001)
-#define	debugCONTRAST				(debugFLAG & 0x0002)
-#define	debugMODE					(debugFLAG & 0x0004)
 
 #define	debugTIMING					(debugFLAG_GLOBAL & debugFLAG & 0x1000)
 #define	debugTRACK					(debugFLAG_GLOBAL & debugFLAG & 0x2000)
@@ -247,7 +233,7 @@ int	ssd1306SetContrast(u8_t Contrast) {
 	u8_t NewVcom = RelContrast < 0x06 ? 0x00 : RelContrast < 0x0B ? 0x20 : 0x30 ;
 	ssd1306SendCommand_2(ssd1306SETVCOMDESELECT, NewVcom) ;
 	ssd1306SetDisplayState(Contrast == 0 ? 0 : 1) ;		// switch display off/on
-	IF_P(debugCONTRAST, "Contrast=0x%02X  PreCharge=0x%02X  Vcom=0x%02X\r\n", Contrast, PreCharge, NewVcom) ;
+//	P("Contrast=0x%02X  PreCharge=0x%02X  Vcom=0x%02X\r\n", Contrast, PreCharge, NewVcom) ;
 	return Contrast ;
 }
 
@@ -300,7 +286,7 @@ int	ssd1306PutChar(int cChr) {
 	IF_EXEC_1(debugTIMING, xSysTimerStart, stSSD1306B) ;
 	const char * pFont = &font5X7[cChr * (ssd1306FONT_WIDTH - 1)] ;
 	u8_t	cBuf[ssd1306FONT_WIDTH + 1 ] ;
-	IF_P(debugCMDS,"%c : %02x-%02x-%02x-%02x-%02x\r\n", cChr, *pFont, *(pFont+1), *(pFont+2), *(pFont+3), *(pFont+4)) ;
+	P("%c : %02x-%02x-%02x-%02x-%02x\r\n", cChr, *pFont, *(pFont+1), *(pFont+2), *(pFont+3), *(pFont+4)) ;
 
 	int	i = 0 ;
 	cBuf[i++] = 0x40 ;									// data following
