@@ -283,27 +283,27 @@ void  ssd1306Clear(void) {
  * in each page (rows).
  */
 int	ssd1306PutChar(int cChr) {
-	IF_EXEC_1(debugTIMING, xSysTimerStart, stSSD1306B) ;
-	const char * pFont = &font5X7[cChr * (ssd1306FONT_WIDTH - 1)] ;
-	u8_t	cBuf[ssd1306FONT_WIDTH + 1 ] ;
-	P("%c : %02x-%02x-%02x-%02x-%02x\r\n", cChr, *pFont, *(pFont+1), *(pFont+2), *(pFont+3), *(pFont+4)) ;
+	const char * pFont = &font5X7[cChr * (ssd1306FONT_WIDTH - 1)];
+	u8_t cBuf[ssd1306FONT_WIDTH + 1];
+//	P("%c : %02x-%02x-%02x-%02x-%02x\r\n", cChr, *pFont, *(pFont+1), *(pFont+2), *(pFont+3), *(pFont+4));
 
-	int	i = 0 ;
-	cBuf[i++] = 0x40 ;									// data following
-	for(; i < ssd1306FONT_WIDTH; cBuf[i++] = *pFont++) ;	// copy font bitmap across
-	cBuf[i]	= 0x00 ;									// add blank separating segment
-	ssd1306I2C_IO(cBuf, sizeof(cBuf)) ;	// send the character
+	IF_EXEC_1(debugTIMING, xSysTimerStart, stSSD1306B);
+	int	i = 0;
+	cBuf[i++] = 0x40;									// data following
+	for(; i < ssd1306FONT_WIDTH; cBuf[i++] = *pFont++);	// copy font bitmap across
+	cBuf[i]	= 0x00;										// add blank separating segment
+	ssd1306I2C_IO(cBuf, sizeof(cBuf));					// send the character
 
-	// update the cursor location
-	sSSD1306.segment	+= ssd1306FONT_WIDTH ;
+	sSSD1306.segment += ssd1306FONT_WIDTH;				// update the cursor location
 	if (sSSD1306.segment >= (sSSD1306.max_seg - LCD_SPARE_PIXELS)) {
-		++sSSD1306.page ;
-		if (sSSD1306.page == sSSD1306.max_page) sSSD1306.page = 0 ;
-		ssd1306SetPageAddr(sSSD1306.page) ;
-		ssd1306SetSegmentAddr(0) ;
+		++sSSD1306.page;
+		if (sSSD1306.page == sSSD1306.max_page)
+			sSSD1306.page = 0;
+		ssd1306SetPageAddr(sSSD1306.page);
+		ssd1306SetSegmentAddr(0);
 	}
-	IF_EXEC_1(debugTIMING, xSysTimerStop, stSSD1306B) ;
-	return cChr ;
+	IF_EXEC_1(debugTIMING, xSysTimerStop, stSSD1306B);
+	return cChr;
 }
 
 void ssd1306PutString(const char * pString) { while(*pString) ssd1306PutChar(*pString++) ; }
@@ -412,6 +412,5 @@ int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
 }
 
 void ssd1306Report(void) {
-	printfx("SSD1306:  Seg:%d/%d  Page:%d/%d\r\n",
-			sSSD1306.segment, sSSD1306.max_seg, sSSD1306.page, sSSD1306.max_page) ;
+	P("SSD1306:  Seg:%d/%d  Page:%d/%d\r\n", sSSD1306.segment, sSSD1306.max_seg, sSSD1306.page, sSSD1306.max_page) ;
 }
