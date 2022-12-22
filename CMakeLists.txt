@@ -2,8 +2,13 @@
 set( srcs "ssd1306.c" )
 set( include_dirs "." )
 set( priv_include_dirs )
-set( requires driver endpoints rules )
-set( priv_requires common driver fonts hal_esp32 printfx syslog systiming )
+set( requires 
+	fonts hal_esp32 
+)
+set( priv_requires 
+#	endpoints
+	common fonts printfx syslog systiming 
+)
 
 idf_component_register(
 	SRCS ${srcs} 
