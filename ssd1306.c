@@ -94,6 +94,12 @@ u8_t BufBits[1 + (LCD_WIDTH_PX * LCD_MAX_ROW)];
 
 static void	ssd1306I2C_IO(u8_t * pBuf, size_t Size) {
 	int iRV;
+	if (((u32_t)sSSD1306.psI2C & 0x00FFFFFFUL) == 0) {
+		RPL(" Ptr=%p  P=%d  A=%lu  I=%lu  T=%lu  S=%lu  Rx=%lu  Tx=%lu\r\n",
+				sSSD1306.psI2C, sSSD1306.psI2C->Port, sSSD1306.psI2C->Addr, sSSD1306.psI2C->DevIdx,
+				sSSD1306.psI2C->Type, sSSD1306.psI2C->Speed, sSSD1306.psI2C->RXxsb, sSSD1306.psI2C->TXxsb);
+		myASSERT(0);
+	}
 	if (Size == 1) {
 		iRV = halI2C_Queue(sSSD1306.psI2C, i2cR_B, NULL, 0, pBuf, Size, (i2cq_p1_t) NULL, (i2cq_p2_t) NULL);
 	} else {
@@ -322,6 +328,11 @@ int	ssd1306Identify(i2c_di_t * psI2C_DI) {
 	psI2C_DI->Type	= i2cDEV_SSD1306;
 	// 10 bytes = 1mS @ 100Khz, 250uS @ 400Khz
 	psI2C_DI->Speed	= i2cSPEED_400;
+	RPL(" Ptr=%p  P=%d  A=%lu  I=%lu  T=%lu  S=%lu  Rx=%lu  Tx=%lu\r\n",
+			sSSD1306.psI2C, sSSD1306.psI2C->Port, sSSD1306.psI2C->Addr, sSSD1306.psI2C->DevIdx,
+			sSSD1306.psI2C->Type, sSSD1306.psI2C->Speed, sSSD1306.psI2C->RXxsb, sSSD1306.psI2C->TXxsb);
+//	esp_cpu_set_watchpoint(0, &sSSD1306.psI2C, sizeof(i2c_di_t *), ESP_CPU_WATCHPOINT_STORE);
+//	esp_cpu_set_watchpoint(0, &sSSD1306.psI2C, sizeof(i2c_di_t *), ESP_CPU_WATCHPOINT_ACCESS);
 	return erSUCCESS;
 }
 
