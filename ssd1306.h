@@ -61,8 +61,12 @@ enum { eDISPLAY };										// sensor values display on/off
 
 // ####################################### structures ##############################################
 
-typedef struct __attribute__((packed)) ssd1306_t {
-	i2c_di_t *	psI2C ;									// size = 4
+typedef struct ssd1306_t {
+	i2c_di_t * psI2C;
+	u8_t status;
+	u8_t MinContrast;
+	u8_t MaxContrast;
+	u8_t tBlank;
 	struct __attribute__((packed)) {
 		u16_t cur_seg : 8;								// current pixel/segment horizontal
 		u16_t cur_col : 5;								// current text column (0 -> 9/20)
@@ -70,10 +74,6 @@ typedef struct __attribute__((packed)) ssd1306_t {
 		u16_t mem_mode : 2;								// 0=horizontal  1=vertical  2=page
 		u16_t spare : 14;
 	};
-	u8_t status;
-	u8_t MinContrast;
-	u8_t MaxContrast;
-	u8_t tBlank;
 } ssd1306_t;
 DUMB_STATIC_ASSERT(sizeof(ssd1306_t) == 12);
 
