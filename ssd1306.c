@@ -5,6 +5,7 @@
  */
 
 #include	"hal_variables.h"
+#if (halHAS_SSD1306 > 0)
 #include	"ssd1306.h"
 #include	"printfx.h"									// +x_definitions +stdarg +stdint +stdio
 #include	"syslog.h"
@@ -392,3 +393,4 @@ int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
 void ssd1306Report(void) {
 	P("SSD1306:  Seg:%d/%d  Page:%d/%d\r\n", sSSD1306.cur_seg, LCD_WIDTH_PX, sSSD1306.cur_row, LCD_MAX_ROW);
 }
+#endif
