@@ -146,10 +146,12 @@ u8_t ssd1306GetStatus(void) {
 
 /* Functions to configure the basic operation of the controller */
 
-void ssd1306SetDisplayState(u8_t State) {
-	IF_myASSERT(debugPARAM, State < 0x02);
-	ssd1306SendCommand_1(State ? ssd1306DISPLAYON : ssd1306DISPLAYOFF);
+void ssd1306SetDisplayState(bool State) {
+	sSSD1306.state = State;
+	ssd1306SendCommand_1(sSSD1306.state ? ssd1306DISPLAYON : ssd1306DISPLAYOFF);
 }
+
+bool ssd1306GetDisplayState(void) { return sSSD1306.state; }
 
 void ssd1306SetScrollState(u8_t State) {
 	IF_myASSERT(debugPARAM, State < 0x02);
@@ -221,6 +223,10 @@ int	ssd1306SetContrast(u8_t Contrast) {
 //	P("Contrast=0x%02X  PreCharge=0x%02X  Vcom=0x%02X\r\n", Contrast, PreCharge, NewVcom);
 	return Contrast;
 }
+
+int ssd1306GetContrast(void) { return sSSD1306.NowContrast; }
+
+int	ssd1306StepContrast(s8_t Step) {return ssd1306SetContrast(sSSD1306.NowContrast += Step); }
 
 void ssd1306SetInverse(u8_t State) {
 	IF_myASSERT(debugPARAM, State < 0x02);
