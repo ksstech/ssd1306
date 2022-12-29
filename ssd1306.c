@@ -297,8 +297,9 @@ void ssd1306PutString(const char * pString) {
 		if (ssd1306StepCursor(false))
 			for(int fi = 0; fi < 5; BufBits[bbi++] = 0, fi++);
 	}
-	if (ci)
+	if (ci) {
 		ssd1306I2C_IO(BufBits, bbi);					// send the character(s)
+	}
 	// TODO: Add support to update the cursor locations
 	ssd1306SendCommand_3(ssd1306PAGEADDR, sSSD1306.cur_row, LCD_MAX_ROW);
 	ssd1306SendCommand_3(ssd1306COLUMNADDR, sSSD1306.cur_seg + LCD_ANOMALY_PAD, LCD_WIDTH_PX + LCD_ANOMALY_PAD);
@@ -318,7 +319,7 @@ int	ssd1306Identify(i2c_di_t * psI2C_DI) {
 		return erFAILURE;
 	}
 	psI2C_DI->Type	= i2cDEV_SSD1306;
-	// 10 bytes = 1mS @ 1000Khz, 250uS @ 400Khz
+	// 10 bytes = 1mS @ 100Khz, 250uS @ 400Khz
 	psI2C_DI->Speed	= i2cSPEED_400;
 	return erSUCCESS;
 }
@@ -345,8 +346,8 @@ void ssd1306ReConfig(i2c_di_t * psI2C_DI) {
 	ssd1306SetScrollState(0);
 	ssd1306SetDisplayState(1);
 	ssd1306Clear();
-	sSSD1306.MinContrast	= 0;
-	sSSD1306.MaxContrast	= 255;
+	sSSD1306.MinContrast = 0;
+	sSSD1306.MaxContrast = 255;
 	ssd1306SetContrast(128);
 }
 
