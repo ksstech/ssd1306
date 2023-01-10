@@ -26,34 +26,6 @@ extern "C" {
 
 // ##################################### MACRO definitions #########################################
 
-#define	SSD1306_ADDR_PRI						0x3C
-#define	SSD1306_ADDR_SEC						0x3D
-
-#define	ssd1306FONT					FONT5X7
-#define	ssd1306FONT_HEIGHT			8
-#define	ssd1306FONT_WIDTH			6
-
-#define	LCD_TYPE_64_48				1					// Wemos D1 Mini OLED shield
-#define	LCD_TYPE_128_64				2
-#define	LCD_TYPE					LCD_TYPE_64_48
-
-#if	(LCD_TYPE == LCD_TYPE_64_48)
-	#define	LCD_WIDTH_PX			64					// pixels horizontal
-	#define	LCD_HEIGHT_PX			48					// pixels vertical
-	#define LCD_MAX_ROW				(LCD_HEIGHT_PX / ssd1306FONT_HEIGHT)
-	#define LCD_MAX_COL				(LCD_WIDTH_PX / ssd1306FONT_WIDTH)
-	#define LCD_MAX_CHR				(LCD_MAX_ROW * LCD_MAX_COL)
-	#define LCD_SPARE_PX			(LCD_WIDTH_PX - (LCD_MAX_COL * ssd1306FONT_WIDTH))
-	#define LCD_LEFT_PAD			0
-	#define LCD_RIGHT_PAD			(LCD_SPARE_PX - LCD_LEFT_PAD)
-	#define	LCD_ANOMALY_PAD			32					// WEMOS Mini D1 OLED shield quirk
-#elif(LCD_TYPE == LCD_TYPE_128_64)
-	#define	LCD_WIDTH_PX				128					// pixels horizontal
-	#define	LCD_HEIGHT_PX				64					// pixels vertical
-#else
-	#error "No/invalid LCD Type selected!!!"
-#endif
-
 
 // ######################################## Enumerations ###########################################
 
@@ -84,7 +56,7 @@ extern ssd1306_t sSSD1306;
 
 // ################################### EXTERNAL FUNCTIONS ##########################################
 
-int	ssd1306SetContrast(u8_t Contrast);
+u8_t ssd1306SetContrast(u8_t Contrast);
 int ssd1306GetContrast(void);
 int ssd1306StepContrast(s8_t Step);
 void ssd1306SetDisplayState(bool State);
