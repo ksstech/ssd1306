@@ -315,7 +315,6 @@ void ssd1306PutString(const char * pString) {
 			for(int fi = 0; fi <= ssd1306_RIGHT_PAD; BufBits[bbi++] = 0, ++fi);
 	}
 	IF_myASSERT(debugTRACK, bbi < sizeof(BufBits));
-//	RP("SSD: %d/%d\r", bbi, sizeof(BufBits));
 	if (ci) {
 		ssd1306I2C_IO(BufBits, bbi);					// send the character(s)
 	}
@@ -340,12 +339,6 @@ int	ssd1306Identify(i2c_di_t * psI2C_DI) {
 	psI2C_DI->Type	= i2cDEV_SSD1306;
 	// 10 bytes = 1mS @ 100Khz, 250uS @ 400Khz
 	psI2C_DI->Speed	= i2cSPEED_400;
-/*
-	RPL(" I2C Ptr=%p  Port=%d  Addr=%lu  Idx=%lu  Type=%lu  Speed=%lu  Rx=%lu  Tx=%lu\r\n",
-			sSSD1306.psI2C, sSSD1306.psI2C->Port, sSSD1306.psI2C->Addr, sSSD1306.psI2C->DevIdx,
-			sSSD1306.psI2C->Type, sSSD1306.psI2C->Speed, sSSD1306.psI2C->RXxsb, sSSD1306.psI2C->TXxsb);
-//	esp_cpu_set_watchpoint(0, &sSSD1306.psI2C, sizeof(i2c_di_t *), ESP_CPU_WATCHPOINT_STORE);
-//	esp_cpu_set_watchpoint(0, &sSSD1306.psI2C, sizeof(i2c_di_t *), ESP_CPU_WATCHPOINT_ACCESS);
 	return erSUCCESS;
 }
 
