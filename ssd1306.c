@@ -23,12 +23,6 @@
 
 // ########################################### Macros ##############################################
 
-#define ssd1306_MAX_ROW				(ssd1306_RES_VER / ssd1306FONT_HEIGHT)
-#define ssd1306_MAX_COL				(ssd1306_RES_HOR / ssd1306FONT_WIDTH)
-#define ssd1306_MAX_CHR				(ssd1306_MAX_ROW * ssd1306_MAX_COL)
-#define ssd1306_SPARE_PX			(ssd1306_RES_HOR - (ssd1306_MAX_COL * ssd1306FONT_WIDTH))
-#define ssd1306_LEFT_PAD			0
-#define ssd1306_RIGHT_PAD			(ssd1306_SPARE_PX - ssd1306_LEFT_PAD)
 #define	ssd1306_ANOMALY_PAD			32					// WEMOS Mini D1 OLED shield quirk
 
 // ###################################### SSD1306 Commands #########################################
@@ -89,7 +83,7 @@
 // ###################################### Private variables ########################################
 
 ssd1306_t sSSD1306 = { 0 };
-u8_t BufBits[((ssd1306_RES_HOR * ssd1306_RES_VER * ssd1306_BITS_PX) / BITS_IN_BYTE) + 10];
+u8_t BufBits[((halLCD_MAX_PX * halLCD_MAX_PY * halLCD_BITS_PX) / BITS_IN_BYTE) + 10];
 
 // ###################################### Public variables #########################################
 
@@ -180,7 +174,7 @@ void ssd1306SetMemoryMode(u8_t Mode) {
  * @param	Offset - 0->63 Pan up or down
  */
 void ssd1306SetOffset(u8_t Offset) {
-	IF_myASSERT(debugPARAM, Offset < ssd1306_RES_HOR);
+	IF_myASSERT(debugPARAM, Offset < halLCD_MAX_PX);
 	ssd1306SendCommand_2(ssd1306SETDISPLAYOFFSET, Offset);
 }
 
@@ -239,18 +233,18 @@ void ssd1306SetInverse(u8_t State) {
 
 /* Functions to set the display graphics/pixel cursor and page position */
 void ssd1306SetSegmentAddr(u8_t Segment) {
-	ssd1306SendCommand_3(ssd1306COLUMNADDR, (sSSD1306.cur_seg = Segment % ssd1306_RES_HOR) + ssd1306_ANOMALY_PAD, ssd1306_RES_HOR + ssd1306_ANOMALY_PAD);
+	ssd1306SendCommand_3(ssd1306COLUMNADDR, (sSSD1306.cur_seg = Segment % halLCD_MAX_PX) + ssd1306_ANOMALY_PAD, halLCD_MAX_PX + ssd1306_ANOMALY_PAD);
 }
 
 void ssd1306SetPageAddr(u8_t Page) {
-	ssd1306SendCommand_3(ssd1306PAGEADDR, sSSD1306.cur_row = Page % ssd1306_MAX_ROW, ssd1306_MAX_ROW);
+	ssd1306SendCommand_3(ssd1306PAGEADDR, sSSD1306.cur_row = Page % halLCD_MAX_ROW, halLCD_MAX_ROW);
 }
 
 /* High level functions to control window/cursor/scrolling etc */
 
 void ssd1306SetTextCursor(u8_t X, u8_t Y) {
 	ssd1306SetPageAddr(Y);
-	ssd1306SetSegmentAddr((X * ssd1306FONT_WIDTH) + ssd1306_LEFT_PAD);
+	ssd1306SetSegmentAddr((X * halLCD_FONT_PX) + halLCD_LEFT_PAD);
 }
 
 void ssd1306Clear(void) {
@@ -264,16 +258,16 @@ void ssd1306Clear(void) {
 }
 
 static bool ssd1306StepCursor(bool DoUpdate) {
-	sSSD1306.cur_seg += ssd1306FONT_WIDTH;				// update the cursor location
-	if (sSSD1306.cur_seg >= (ssd1306_RES_HOR - ssd1306_RIGHT_PAD)) {
+	sSSD1306.cur_seg += halLCD_FONT_PX;				// update the cursor location
+	if (sSSD1306.cur_seg >= (halLCD_MAX_PX - halLCD_RIGHT_PAD)) {
 		++sSSD1306.cur_row;
-		if (sSSD1306.cur_row == ssd1306_MAX_ROW)
+		if (sSSD1306.cur_row == halLCD_MAX_ROW)
 			sSSD1306.cur_row = 0;
 		if (DoUpdate) {
 			ssd1306SetPageAddr(sSSD1306.cur_row);
-			ssd1306SetSegmentAddr(ssd1306_LEFT_PAD);
+			ssd1306SetSegmentAddr(halLCD_LEFT_PAD);
 		} else {
-			sSSD1306.cur_seg = ssd1306_LEFT_PAD;
+			sSSD1306.cur_seg = halLCD_LEFT_PAD;
 		}
 		return 1;
 	}
@@ -289,11 +283,11 @@ static bool ssd1306StepCursor(bool DoUpdate) {
  */
 int	ssd1306PutChar(int cChr) {
 	IF_EXEC_1(debugTIMING, xSysTimerStart, stSSD1306B);
-	const char * pFont = &font5X7[cChr * (ssd1306FONT_WIDTH - 1)];
-	u8_t cBuf[ssd1306FONT_WIDTH + 1];
+	const char * pFont = &font5X7[cChr * (halLCD_FONT_PX - 1)];
+	u8_t cBuf[halLCD_FONT_PX + 1];
 	int	i = 0;
 	cBuf[i++] = 0x40;									// data following
-	for(; i < ssd1306FONT_WIDTH; cBuf[i++] = *pFont++);	// copy font bitmap across
+	for(; i < halLCD_FONT_PX; cBuf[i++] = *pFont++);	// copy font bitmap across
 	cBuf[i]	= 0x00;										// add blank separating segment
 	ssd1306I2C_IO(cBuf, sizeof(cBuf));					// send the character
 	ssd1306StepCursor(true);
@@ -305,22 +299,22 @@ void ssd1306PutString(const char * pString) {
 	IF_EXEC_1(debugTIMING, xSysTimerStart, stSSD1306B);
 	int bbi = 0, ci = 0;
 	BufBits[bbi++] = 0x40;								// data following
-	while (*pString && ci < ssd1306_MAX_CHR) {
+	while (*pString && ci < halLCD_MAX_CHAR) {
 		int cChr = *pString++;
-		const char * pFont = &font5X7[cChr * (ssd1306FONT_WIDTH - 1)];
-		for(int fi = 0; fi < (ssd1306FONT_WIDTH-1); BufBits[bbi++] = pFont[fi++]);
+		const char * pFont = &font5X7[cChr * (halLCD_FONT_PX - 1)];
+		for(int fi = 0; fi < (halLCD_FONT_PX-1); BufBits[bbi++] = pFont[fi++]);
 		BufBits[bbi++] = 0x00;							// add blank separating segment
 		++ci;
 		if (ssd1306StepCursor(false) == 1)
-			for(int fi = 0; fi <= ssd1306_RIGHT_PAD; BufBits[bbi++] = 0, ++fi);
+			for(int fi = 0; fi <= halLCD_RIGHT_PAD; BufBits[bbi++] = 0, ++fi);
 	}
 	IF_myASSERT(debugTRACK, bbi < sizeof(BufBits));
 	if (ci) {
 		ssd1306I2C_IO(BufBits, bbi);					// send the character(s)
 	}
 	// TODO: Add support to update the cursor locations
-	ssd1306SendCommand_3(ssd1306PAGEADDR, sSSD1306.cur_row, ssd1306_MAX_ROW);
-	ssd1306SendCommand_3(ssd1306COLUMNADDR, sSSD1306.cur_seg + ssd1306_ANOMALY_PAD, ssd1306_RES_HOR + ssd1306_ANOMALY_PAD);
+	ssd1306SendCommand_3(ssd1306PAGEADDR, sSSD1306.cur_row, halLCD_MAX_ROW);
+	ssd1306SendCommand_3(ssd1306COLUMNADDR, sSSD1306.cur_seg + ssd1306_ANOMALY_PAD, halLCD_MAX_PX + ssd1306_ANOMALY_PAD);
 	IF_EXEC_1(debugTIMING, xSysTimerStop, stSSD1306B);
 }
 
@@ -350,7 +344,7 @@ int	ssd1306Config(i2c_di_t * psI2C_DI) {
 }
 
 void ssd1306ReConfig(i2c_di_t * psI2C_DI) {
-	ssd1306SendCommand_2(ssd1306SETMULTIPLEX, ssd1306_RES_VER-1);
+	ssd1306SendCommand_2(ssd1306SETMULTIPLEX, halLCD_MAX_PY-1);
 	ssd1306SetOffset(0);
 	ssd1306SendCommand_1(ssd1306SETSTARTLINE | 0x0);
 	ssd1306SendCommand_1(ssd1306SEGREMAP | 0x1);
@@ -379,35 +373,35 @@ int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
 	ssd1306SetTextCursor(0, 5); ssd1306PutString("(55555555)");
 
 	SL_DBG("ssd1306: Writing bars\r\n");
-	u8_t cBuf[1+ssd1306_RES_HOR];
+	u8_t cBuf[1+halLCD_MAX_PX];
 	ssd1306SetTextCursor(0, 0);
 	cBuf[0]	= 0x40;								// sending data
-	memset(&cBuf[1], 0x88, ssd1306_RES_HOR);
+	memset(&cBuf[1], 0x88, halLCD_MAX_PX);
 	ssd1306I2C_IO(cBuf, sizeof(cBuf));
 
-	memset(&cBuf[1], 0xCC, ssd1306_RES_HOR);
+	memset(&cBuf[1], 0xCC, halLCD_MAX_PX);
 	ssd1306I2C_IO(cBuf, sizeof(cBuf));
 
-	memset(&cBuf[1], 0xEE, ssd1306_RES_HOR);
+	memset(&cBuf[1], 0xEE, halLCD_MAX_PX);
 	ssd1306I2C_IO(cBuf, sizeof(cBuf));
 
-	memset(&cBuf[1], 0x77, ssd1306_RES_HOR);
+	memset(&cBuf[1], 0x77, halLCD_MAX_PX);
 	ssd1306I2C_IO(cBuf, sizeof(cBuf));
 
-	memset(&cBuf[1], 0x33, ssd1306_RES_HOR);
+	memset(&cBuf[1], 0x33, halLCD_MAX_PX);
 	ssd1306I2C_IO(cBuf, sizeof(cBuf));
 
-	memset(&cBuf[1], 0x11, ssd1306_RES_HOR);
+	memset(&cBuf[1], 0x11, halLCD_MAX_PX);
 	ssd1306I2C_IO(cBuf, sizeof(cBuf));
 
 	SL_DBG("ssd1306: Clearing the screen\r\n");
 	ssd1306Clear();
-	for(int i = 0; i < (ssd1306_MAX_COL * ssd1306_MAX_ROW); i++)
+	for(int i = 0; i < (halLCD_MAX_COL * halLCD_MAX_ROW); i++)
 		ssd1306PutChar(i + CHR_SPACE);
 	return erSUCCESS;
 }
 
 void ssd1306Report(void) {
-	P("SSD1306:  Seg:%d/%d  Page:%d/%d\r\n", sSSD1306.cur_seg, ssd1306_RES_HOR, sSSD1306.cur_row, ssd1306_MAX_ROW);
+	P("SSD1306:  Seg:%d/%d  Page:%d/%d\r\n", sSSD1306.cur_seg, halLCD_MAX_PX, sSSD1306.cur_row, halLCD_MAX_ROW);
 }
 #endif
