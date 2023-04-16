@@ -41,11 +41,12 @@ typedef struct __attribute__((packed)) ssd1306_t {
 	u8_t tBlank;
 	u8_t status;
 	struct __attribute__((packed)) {
-		u8_t cur_seg :8;								// current pixel/segment horizontal
-		u8_t cur_col :5;								// current text column (0 -> 9/20)
-		u8_t cur_row :3;								// current row ie group of 8 pixel rows
-		u8_t mem_mode :2;								// 0=horizontal  1=vertical  2=page
+		u8_t cur_seg:8;									// current pixel/segment horizontal
+		u8_t cur_col:5;									// current text column (0 -> 9/20)
+		u8_t cur_row:3;									// current row ie group of 8 pixel rows
+		u8_t mem_mode:2;								// 0=horizontal  1=vertical  2=page
 		u8_t state:1;
+		u8_t spare:5;
 	};
 } ssd1306_t;
 DUMB_STATIC_ASSERT(sizeof(ssd1306_t) == 12);
