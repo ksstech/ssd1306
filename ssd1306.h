@@ -4,7 +4,7 @@
 
 #pragma	once
 
-#include "hal_i2c.h"
+#include "hal_i2cm.h"
 #include "fonts.h"
 
 #include <stdint.h>

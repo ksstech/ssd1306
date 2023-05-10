@@ -1,6 +1,5 @@
 /**
- * ssd1306.c
- * Copyright (c) 2014-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
+ * ssd1306.c Copyright (c) 2014-23 Andre M. Maree / KSS Technologies (Pty) Ltd.
  * https://github.com/wtfuzz/ssd1306_text
  */
 
@@ -99,9 +98,9 @@ static void	ssd1306I2C_IO(u8_t * pBuf, size_t Size) {
 		myASSERT(0);
 	}
 	if (Size == 1) {
-		iRV = halI2C_Queue(sSSD1306.psI2C, i2cR_B, NULL, 0, pBuf, Size, (i2cq_p1_t) NULL, (i2cq_p2_t) NULL);
+		iRV = halI2CM_Queue(sSSD1306.psI2C, i2cR_B, NULL, 0, pBuf, Size, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
 	} else {
-		iRV = halI2C_Queue(sSSD1306.psI2C, i2cW_B, pBuf, Size, NULL, 0, (i2cq_p1_t) NULL, (i2cq_p2_t) NULL);
+		iRV = halI2CM_Queue(sSSD1306.psI2C, i2cW_B, pBuf, Size, NULL, 0, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
 	}
 	if (iRV < erSUCCESS)
 		xSyslogError(__FUNCTION__, iRV);
@@ -231,7 +230,7 @@ void ssd1306SetInverse(u8_t State) {
 	ssd1306SendCommand_1(State ? ssd1306INVERTDISPLAY : ssd1306NORMALDISPLAY);
 }
 
-/* Functions to set the display graphics/pixel cursor and page position */
+// Functions to set the display graphics/pixel cursor and page position
 void ssd1306SetSegmentAddr(u8_t Segment) {
 	ssd1306SendCommand_3(ssd1306COLUMNADDR, (sSSD1306.cur_seg = Segment % halLCD_MAX_PX) + ssd1306_ANOMALY_PAD, halLCD_MAX_PX + ssd1306_ANOMALY_PAD);
 }
@@ -240,8 +239,7 @@ void ssd1306SetPageAddr(u8_t Page) {
 	ssd1306SendCommand_3(ssd1306PAGEADDR, sSSD1306.cur_row = Page % halLCD_MAX_ROW, halLCD_MAX_ROW);
 }
 
-/* High level functions to control window/cursor/scrolling etc */
-
+// High level functions to control window/cursor/scrolling
 void ssd1306SetTextCursor(u8_t X, u8_t Y) {
 	ssd1306SetPageAddr(Y);
 	ssd1306SetSegmentAddr((X * halLCD_FONT_PX) + halLCD_LEFT_PAD);
@@ -326,7 +324,7 @@ int	ssd1306Identify(i2c_di_t * psI2C_DI) {
 	ssd1306GetStatus();									// detect & verify existence.
 	psI2C_DI->Test = 0;
 	if ((sSSD1306.status & 0x03) != 0x03) {
-		SL_ERR("I2C device at 0x%02X NOT SSD1306 (%02X)", psI2C_DI->Addr, sSSD1306.status);
+		IF_PX(debugTRACK && ioB1GET(ioI2Cinit), "I2C device at 0x%02X NOT SSD1306 (%02X)", psI2C_DI->Addr, sSSD1306.status);
 		sSSD1306.psI2C	= NULL;
 		return erFAILURE;
 	}
@@ -343,7 +341,45 @@ int	ssd1306Config(i2c_di_t * psI2C_DI) {
 	return erSUCCESS;
 }
 
+/*
+ok	 SSD1306_DISPLAYOFF, // display off
+ok	 SSD1306_MEMORYMODE, HORIZONTAL_ADDRESSING_MODE, // Page Addressing mode
+ok   SSD1306_COMSCANDEC,             // Scan from 127 to 0 (Reverse scan)
+ok   SSD1306_SETSTARTLINE | 0x00,    // First line to start scanning from
+ok   SSD1306_SETCONTRAST, 0x7F,      // contast value to 0x7F according to datasheet
+ok   SSD1306_SEGREMAP | 0x01,        // Use reverse mapping. 0x00 - is normal mapping
+ok   SSD1306_NORMALDISPLAY,
+ok   SSD1306_SETMULTIPLEX, 63,       // Reset to default MUX. See datasheet
+ok   SSD1306_SETDISPLAYOFFSET, 0x00, // no offset
+ok   SSD1306_SETDISPLAYCLOCKDIV, 0x80,// set to default ratio/osc frequency
+ok   SSD1306_SETPRECHARGE, 0x22,     // switch precharge to 0x22 // 0xF1
+ok   SSD1306_SETCOMPINS, 0x12,       // set divide ratio
+ok   SSD1306_SETVCOMDETECT, 0x20,    // vcom deselect to 0x20 // 0x40
+ok   SSD1306_CHARGEPUMP, 0x14,       // Enable charge pump
+ok   SSD1306_DISPLAYALLON_RESUME,
+ok   SSD1306_DISPLAYON,
+
+//	ssd1306SendCommand_2(ssd1306SETMULTIPLEX, halLCD_MAX_PY-1);
+//	ssd1306SetOffset(0);
+//	ssd1306SendCommand_1(ssd1306SETSTARTLINE | 0x0);
+//	ssd1306SendCommand_1(ssd1306SEGREMAP | 0x1);
+//	ssd1306SendCommand_1(ssd1306COMSCANDEC);
+//	ssd1306SendCommand_2(ssd1306SETCOMPINS, 0x12);
+//	ssd1306SendCommand_2(ssd1306SETDISPLAYCLOCKDIV, 0x80);
+//	ssd1306SendCommand_2(ssd1306CHARGEPUMP, ssd1306CHARGEPUMP_ON);
+//	ssd1306SetMemoryMode(0x00);
+//	ssd1306SendCommand_1(ssd1306DISPLAYALLON_RESUME);
+//	ssd1306SetInverse(0);
+//	ssd1306SetScrollState(0);
+//	ssd1306SetDisplayState(1);
+//	ssd1306Clear();
+	sSSD1306.MinContrast = 0;
+	sSSD1306.MaxContrast = 255;
+//	ssd1306SetContrast(128);
+*/
+
 void ssd1306ReConfig(i2c_di_t * psI2C_DI) {
+#if (ssd1306_64_32 == 1)
 	ssd1306SendCommand_2(ssd1306SETMULTIPLEX, halLCD_MAX_PY-1);
 	ssd1306SetOffset(0);
 	ssd1306SendCommand_1(ssd1306SETSTARTLINE | 0x0);
@@ -361,6 +397,43 @@ void ssd1306ReConfig(i2c_di_t * psI2C_DI) {
 	sSSD1306.MinContrast = 0;
 	sSSD1306.MaxContrast = 255;
 	ssd1306SetContrast(128);
+#elif (ssd1306_128_64 == 1)
+	u8_t InitBuf[] = {
+		ssd1306DISPLAYOFF,
+		ssd1306SETDISPLAYCLOCKDIV,		0x80,
+		ssd1306SETMULTIPLEX,			halLCD_MAX_PY-1,
+		ssd1306SETDISPLAYOFFSET,		0,
+		ssd1306SETSTARTLINE | 0x0,
+
+//		ssd1306CHARGEPUMP,				0x10,			// external VCC
+		ssd1306CHARGEPUMP,				0x14,
+
+		ssd1306MEMORYMODE,				0,				// Horizontal
+//		ssd1306MEMORYMODE,				1,				// Vertical
+//		ssd1306MEMORYMODE,				2,				// Page
+		ssd1306SEGREMAP | 0x01,
+		ssd1306COMSCANDEC,								// Scan 127 to 0 (reverse)
+		ssd1306SETCOMPINS,				0x12,
+
+		ssd1306SETCONTRAST,				0x7F,
+//		ssd1306SETCONTRAST,				0x9F,
+//		ssd1306SETCONTRAST,				0xCF,
+
+		ssd1306SETPRECHARGE,			0x22,			// external VCC
+//		ssd1306SETPRECHARGE,			0xF1,
+		ssd1306SETVCOMDESELECT,			0x20,			// was 0x40,
+		ssd1306DISPLAYALLON_RESUME,
+		ssd1306NORMALDISPLAY,
+		ssd1306SCROLL_DEACTIVATE,
+		ssd1306DISPLAYON,
+	};
+	ssd1306I2C_IO(InitBuf, sizeof(InitBuf));
+	ssd1306Clear();
+	sSSD1306.MinContrast = 0;
+	sSSD1306.MaxContrast = 255;
+#else
+	#warning "Undefined display type"
+#endif
 }
 
 int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
