@@ -106,20 +106,18 @@ static void	ssd1306I2C_IO(u8_t * pBuf, size_t Size) {
 		xSyslogError(__FUNCTION__, iRV);
 }
 
-// ######################################## Public APIs ############################################
-
 /**
  * ssd1306SendCommand_?() - send a single/dual/triple byte command(s) to the controller
  * @param	Cmd? - command(s) to send
  */
-void ssd1306SendCommand_1(u8_t Cmd1) {
+static void ssd1306SendCommand_1(u8_t Cmd1) {
 	u8_t cBuf[2];
 	cBuf[0]	= 0x00;									// command following
 	cBuf[1]	= Cmd1;
 	ssd1306I2C_IO(cBuf, sizeof(cBuf));
 }
 
-void ssd1306SendCommand_2(u8_t Cmd1, u8_t Cmd2) {
+static void ssd1306SendCommand_2(u8_t Cmd1, u8_t Cmd2) {
 	u8_t cBuf[3];
 	cBuf[0]	= 0x00;									// commands following
 	cBuf[1]	= Cmd1;
@@ -127,7 +125,7 @@ void ssd1306SendCommand_2(u8_t Cmd1, u8_t Cmd2) {
 	ssd1306I2C_IO(cBuf, sizeof(cBuf));
 }
 
-void ssd1306SendCommand_3(u8_t Cmd1, u8_t Cmd2, u8_t Cmd3) {
+static void ssd1306SendCommand_3(u8_t Cmd1, u8_t Cmd2, u8_t Cmd3) {
 	u8_t cBuf[4];
 	cBuf[0]	= 0x00;									// commands following
 	cBuf[1]	= Cmd1;
@@ -155,15 +153,15 @@ void ssd1306SetScrollState(u8_t State) {
 	ssd1306SendCommand_1(State ? ssd1306SCROLL_ACTIVATE : ssd1306SCROLL_DEACTIVATE);
 }
 
-void ssd1306SetScanDirection(u8_t State) {
+/* static void ssd1306SetScanDirection(u8_t State) {
 	IF_myASSERT(debugPARAM, State < 0x02);
 	ssd1306SendCommand_1(State ? ssd1306COMSCANINC : ssd1306COMSCANDEC);
-}
+} */
 
 /**
  *  @param	Mode = 0/horizontal  1/vertical  2/page
  */
-void ssd1306SetMemoryMode(u8_t Mode) {
+static void ssd1306SetMemoryMode(u8_t Mode) {
 	IF_myASSERT(debugPARAM, Mode < 0x03);
 	sSSD1306.mem_mode = Mode;
 	ssd1306SendCommand_2(ssd1306MEMORYMODE, Mode);
@@ -172,7 +170,7 @@ void ssd1306SetMemoryMode(u8_t Mode) {
 /**
  * @param	Offset - 0->63 Pan up or down
  */
-void ssd1306SetOffset(u8_t Offset) {
+static void ssd1306SetOffset(u8_t Offset) {
 	IF_myASSERT(debugPARAM, Offset < halLCD_MAX_PX);
 	ssd1306SendCommand_2(ssd1306SETDISPLAYOFFSET, Offset);
 }
