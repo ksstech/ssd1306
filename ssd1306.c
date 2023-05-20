@@ -134,21 +134,33 @@ static void ssd1306SendCommand_3(u8_t Cmd1, u8_t Cmd2, u8_t Cmd3) {
 	ssd1306I2C_IO(cBuf, sizeof(cBuf));
 }
 
-u8_t ssd1306GetStatus(void) {
-	ssd1306I2C_IO(&sSSD1306.status, SO_MEM(ssd1306_t, status));
-	return sSSD1306.status;
+// Functions to set the display graphics/pixel cursor and page position
+static void ssd1306SetSegmentAddr(u8_t Segment) {
+	ssd1306SendCommand_3(ssd1306COLUMNADDR, (sSSD1306.cur_seg = Segment % halLCD_MAX_PX) + ssd1306_ANOMALY_PAD, halLCD_MAX_PX + ssd1306_ANOMALY_PAD);
 }
 
-/* Functions to configure the basic operation of the controller */
-
-void ssd1306SetDisplayState(bool State) {
-	sSSD1306.state = State;
-	ssd1306SendCommand_1(sSSD1306.state ? ssd1306DISPLAYON : ssd1306DISPLAYOFF);
+static void ssd1306SetPageAddr(u8_t Page) {
+	ssd1306SendCommand_3(ssd1306PAGEADDR, sSSD1306.cur_row = Page % halLCD_MAX_ROW, halLCD_MAX_ROW);
 }
 
-bool ssd1306GetDisplayState(void) { return sSSD1306.state; }
+static bool ssd1306StepCursor(bool DoUpdate) {
+	sSSD1306.cur_seg += halLCD_FONT_PX;				// update the cursor location
+	if (sSSD1306.cur_seg >= (halLCD_MAX_PX - halLCD_RIGHT_PAD)) {
+		++sSSD1306.cur_row;
+		if (sSSD1306.cur_row == halLCD_MAX_ROW)
+			sSSD1306.cur_row = 0;
+		if (DoUpdate) {
+			ssd1306SetPageAddr(sSSD1306.cur_row);
+			ssd1306SetSegmentAddr(halLCD_LEFT_PAD);
+		} else {
+			sSSD1306.cur_seg = halLCD_LEFT_PAD;
+		}
+		return 1;
+	}
+	return 0;
+}
 
-void ssd1306SetScrollState(u8_t State) {
+static void ssd1306SetScrollState(u8_t State) {
 	IF_myASSERT(debugPARAM, State < 0x02);
 	ssd1306SendCommand_1(State ? ssd1306SCROLL_ACTIVATE : ssd1306SCROLL_DEACTIVATE);
 }
@@ -174,6 +186,22 @@ static void ssd1306SetOffset(u8_t Offset) {
 	IF_myASSERT(debugPARAM, Offset < halLCD_MAX_PX);
 	ssd1306SendCommand_2(ssd1306SETDISPLAYOFFSET, Offset);
 }
+
+// ######################################## Public APIs ############################################
+
+u8_t ssd1306GetStatus(void) {
+	ssd1306I2C_IO(&sSSD1306.status, SO_MEM(ssd1306_t, status));
+	return sSSD1306.status;
+}
+
+/* Functions to configure the basic operation of the controller */
+
+void ssd1306SetDisplayState(bool State) {
+	sSSD1306.state = State;
+	ssd1306SendCommand_1(sSSD1306.state ? ssd1306DISPLAYON : ssd1306DISPLAYOFF);
+}
+
+bool ssd1306GetDisplayState(void) { return sSSD1306.state; }
 
 /**
  * @param	Contrast - 0->255 dim to bright
@@ -228,15 +256,6 @@ void ssd1306SetInverse(u8_t State) {
 	ssd1306SendCommand_1(State ? ssd1306INVERTDISPLAY : ssd1306NORMALDISPLAY);
 }
 
-// Functions to set the display graphics/pixel cursor and page position
-void ssd1306SetSegmentAddr(u8_t Segment) {
-	ssd1306SendCommand_3(ssd1306COLUMNADDR, (sSSD1306.cur_seg = Segment % halLCD_MAX_PX) + ssd1306_ANOMALY_PAD, halLCD_MAX_PX + ssd1306_ANOMALY_PAD);
-}
-
-void ssd1306SetPageAddr(u8_t Page) {
-	ssd1306SendCommand_3(ssd1306PAGEADDR, sSSD1306.cur_row = Page % halLCD_MAX_ROW, halLCD_MAX_ROW);
-}
-
 // High level functions to control window/cursor/scrolling
 void ssd1306SetTextCursor(u8_t X, u8_t Y) {
 	ssd1306SetPageAddr(Y);
@@ -251,23 +270,6 @@ void ssd1306Clear(void) {
 	ssd1306I2C_IO(BufBits, sizeof(BufBits));
 	ssd1306SetTextCursor(0, 0);
 	IF_EXEC_1(debugTIMING, xSysTimerStop, stSSD1306A);
-}
-
-static bool ssd1306StepCursor(bool DoUpdate) {
-	sSSD1306.cur_seg += halLCD_FONT_PX;				// update the cursor location
-	if (sSSD1306.cur_seg >= (halLCD_MAX_PX - halLCD_RIGHT_PAD)) {
-		++sSSD1306.cur_row;
-		if (sSSD1306.cur_row == halLCD_MAX_ROW)
-			sSSD1306.cur_row = 0;
-		if (DoUpdate) {
-			ssd1306SetPageAddr(sSSD1306.cur_row);
-			ssd1306SetSegmentAddr(halLCD_LEFT_PAD);
-		} else {
-			sSSD1306.cur_seg = halLCD_LEFT_PAD;
-		}
-		return 1;
-	}
-	return 0;
 }
 
 /**
