@@ -160,7 +160,7 @@ static bool ssd1306StepCursor(bool DoUpdate) {
 	return 0;
 }
 
-static void ssd1306SetScrollState(u8_t State) {
+void ssd1306SetScrollState(u8_t State) {
 	IF_myASSERT(debugPARAM, State < 0x02);
 	ssd1306SendCommand_1(State ? ssd1306SCROLL_ACTIVATE : ssd1306SCROLL_DEACTIVATE);
 }
@@ -173,7 +173,7 @@ static void ssd1306SetScrollState(u8_t State) {
 /**
  *  @param	Mode = 0/horizontal  1/vertical  2/page
  */
-static void ssd1306SetMemoryMode(u8_t Mode) {
+void ssd1306SetMemoryMode(u8_t Mode) {
 	IF_myASSERT(debugPARAM, Mode < 0x03);
 	sSSD1306.mem_mode = Mode;
 	ssd1306SendCommand_2(ssd1306MEMORYMODE, Mode);
@@ -182,7 +182,7 @@ static void ssd1306SetMemoryMode(u8_t Mode) {
 /**
  * @param	Offset - 0->63 Pan up or down
  */
-static void ssd1306SetOffset(u8_t Offset) {
+void ssd1306SetOffset(u8_t Offset) {
 	IF_myASSERT(debugPARAM, Offset < halLCD_MAX_PX);
 	ssd1306SendCommand_2(ssd1306SETDISPLAYOFFSET, Offset);
 }
@@ -316,6 +316,8 @@ void ssd1306PutString(const char * pString) {
 	IF_EXEC_1(debugTIMING, xSysTimerStop, stSSD1306B);
 }
 
+// ############################# Device identify, diagnose, [re]config #############################
+
 int	ssd1306Identify(i2c_di_t * psI2C_DI) {
 	psI2C_DI->TRXmS	= 10;
 	psI2C_DI->CLKuS = 400;			// Max 13000 (13mS)
@@ -324,13 +326,13 @@ int	ssd1306Identify(i2c_di_t * psI2C_DI) {
 	ssd1306GetStatus();									// detect & verify existence.
 	psI2C_DI->Test = 0;
 	if ((sSSD1306.status & 0x03) != 0x03) {
-		IF_PX(debugTRACK && ioB1GET(ioI2Cinit), "I2C device at 0x%02X NOT SSD1306 (%02X)", psI2C_DI->Addr, sSSD1306.status);
+		SL_ERR("I2C device at 0x%02X NOT SSD1306 (%02X)", psI2C_DI->Addr, sSSD1306.status);
 		sSSD1306.psI2C	= NULL;
 		return erFAILURE;
 	}
 	psI2C_DI->Type	= i2cDEV_SSD1306;
-	// 10 bytes = 1mS @ 100Khz, 250uS @ 400Khz
-	psI2C_DI->Speed	= i2cSPEED_400;
+	psI2C_DI->Speed	= i2cSPEED_400;						// 10 bytes = 1mS @ 100Khz, 250uS @ 400Khz
+	DevIDflag |= (1 << devID_SSD1306);
 	return erSUCCESS;
 }
 
