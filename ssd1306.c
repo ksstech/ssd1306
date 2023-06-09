@@ -92,7 +92,7 @@ u8_t BufBits[((halLCD_MAX_PX * halLCD_MAX_PY * halLCD_BITS_PX) / BITS_IN_BYTE) +
 static void	ssd1306I2C_IO(u8_t * pBuf, size_t Size) {
 	int iRV;
 	if (((u32_t)sSSD1306.psI2C & 0x00FFFFFFUL) == 0) {
-		RPL(" Ptr=%p  P=%d  A=%lu  I=%lu  T=%lu  S=%lu  Rx=%lu  Tx=%lu\r\n",
+		RPL(" Ptr=%p  P=%d  A=%lu  I=%lu  T=%lu  S=%lu  Rx=%d  Tx=%d\r\n",
 				sSSD1306.psI2C, sSSD1306.psI2C->Port, sSSD1306.psI2C->Addr, sSSD1306.psI2C->DevIdx,
 				sSSD1306.psI2C->Type, sSSD1306.psI2C->Speed, sSSD1306.psI2C->RXxsb, sSSD1306.psI2C->TXxsb);
 		myASSERT(0);
