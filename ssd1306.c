@@ -1,9 +1,10 @@
 /**
- * ssd1306.c Copyright (c) 2014-23 Andre M. Maree / KSS Technologies (Pty) Ltd.
+ * ssd1306.c - Copyright (c) 2014-23 Andre M. Maree / KSS Technologies (Pty) Ltd.
  * https://github.com/wtfuzz/ssd1306_text
  */
 
 #include	"hal_variables.h"
+
 #if (halHAS_SSD1306 > 0)
 #include	"ssd1306.h"
 #include	"printfx.h"									// +x_definitions +stdarg +stdint +stdio
@@ -476,7 +477,9 @@ int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
 	return erSUCCESS;
 }
 
-void ssd1306Report(void) {
-	P("SSD1306:  Seg:%d/%d  Page:%d/%d\r\n", sSSD1306.cur_seg, halLCD_MAX_PX, sSSD1306.cur_row, halLCD_MAX_ROW);
+int ssd1306Report(report_t * psR) {
+	int iRV = halI2C_DeviceReport(psR, (void *) sSSD1306.psI2C);
+	iRV += wprintfx(psR, "SSD1306:  Seg:%d/%d  Page:%d/%d\r\n", sSSD1306.cur_seg, halLCD_MAX_PX, sSSD1306.cur_row, halLCD_MAX_ROW);
+	return iRV;
 }
 #endif

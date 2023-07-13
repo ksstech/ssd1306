@@ -72,7 +72,7 @@ int ssd1306Config(i2c_di_t * psI2C_DI);
 void ssd1306ReConfig(i2c_di_t * psI2C_DI);
 int ssd1306Diagnostics(i2c_di_t * psI2C_DI);
 
-void ssd1306Report(void);
+int ssd1306Report(report_t * psR);
 
 #ifdef __cplusplus
 }
