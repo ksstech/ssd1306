@@ -4,9 +4,9 @@
 
 #pragma	once
 
-#include "hal_i2cm.h"
 #include "fonts.h"
 
+#include "hal_i2c_common.h"
 #include <stdint.h>
 
 /*	Wemos 0.96" OLED
