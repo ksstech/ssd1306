@@ -319,29 +319,28 @@ void ssd1306PutString(const char * pString) {
 
 // ############################# Device identify, diagnose, [re]config #############################
 
-int	ssd1306Identify(i2c_di_t * psI2C_DI) {
-	psI2C_DI->TRXmS	= 10;
-	psI2C_DI->CLKuS = 400;			// Max 13000 (13mS)
-	psI2C_DI->Test	= 1;
-	sSSD1306.psI2C	= psI2C_DI;
+int	ssd1306Identify(i2c_di_t * psI2C) {
+	psI2C->TRXmS = 10;
+	psI2C->CLKuS = 400;			// Max 13000 (13mS)
+	psI2C->Test	= 1;
+	sSSD1306.psI2C = psI2C;
 	ssd1306GetStatus();									// detect & verify existence.
-	psI2C_DI->Test = 0;
+	psI2C->Test = 0;
 	if ((sSSD1306.status & 0x03) != 0x03) {
-		SL_ERR("I2C device at 0x%02X NOT SSD1306 (%02X)", psI2C_DI->Addr, sSSD1306.status);
-		sSSD1306.psI2C	= NULL;
+		SL_ERR("I2C device at 0x%02X NOT SSD1306 (%02X)", psI2C->Addr, sSSD1306.status);
+		sSSD1306.psI2C = NULL;
 		return erFAILURE;
 	}
-	psI2C_DI->Type	= i2cDEV_SSD1306;
-	psI2C_DI->Speed	= i2cSPEED_400;						// 10 bytes = 1mS @ 100Khz, 250uS @ 400Khz
-	DevIDflag |= (1 << devID_SSD1306);
+	psI2C->Type = i2cDEV_SSD1306;
+	psI2C->Speed = i2cSPEED_400;						// 10 bytes = 1mS @ 100Khz, 250uS @ 400Khz
+	xEventGroupSetBits(EventDevices, devMASK_SSD1306);
 	return erSUCCESS;
 }
 
-int	ssd1306Config(i2c_di_t * psI2C_DI) {
+int	ssd1306Config(i2c_di_t * psI2C) {
 	IF_SYSTIMER_INIT(debugTIMING, stSSD1306A, stMICROS, "SSD1306a", 1500, 15000);
 	IF_SYSTIMER_INIT(debugTIMING, stSSD1306B, stMICROS, "SSD1306b", 300, 3000);
-	ssd1306ReConfig(psI2C_DI);
-	return erSUCCESS;
+	return ssd1306ReConfig(psI2C);
 }
 
 /*
@@ -381,8 +380,8 @@ ok   SSD1306_DISPLAYON,
 //	ssd1306SetContrast(128);
 */
 
-void ssd1306ReConfig(i2c_di_t * psI2C_DI) {
-#if (ssd1306_64_32 == 1)
+int ssd1306ReConfig(i2c_di_t * psI2C) {
+	#if (ssd1306_64_32 == 1)
 	ssd1306SendCommand_2(ssd1306SETMULTIPLEX, halLCD_MAX_PY-1);
 	ssd1306SetOffset(0);
 	ssd1306SendCommand_1(ssd1306SETSTARTLINE | 0x0);
@@ -400,7 +399,8 @@ void ssd1306ReConfig(i2c_di_t * psI2C_DI) {
 	sSSD1306.MinContrast = 0;
 	sSSD1306.MaxContrast = 255;
 	ssd1306SetContrast(128);
-#elif (ssd1306_128_64 == 1)
+
+	#elif (ssd1306_128_64 == 1)
 	u8_t InitBuf[] = {
 		ssd1306DISPLAYOFF,
 		ssd1306SETDISPLAYCLOCKDIV,		0x80,
@@ -434,12 +434,14 @@ void ssd1306ReConfig(i2c_di_t * psI2C_DI) {
 	ssd1306Clear();
 	sSSD1306.MinContrast = 0;
 	sSSD1306.MaxContrast = 255;
-#else
+
+	#else
 	#warning "Undefined display type"
-#endif
+	#endif
+	return erSUCCESS;
 }
 
-int ssd1306Diagnostics(i2c_di_t * psI2C_DI) {
+int ssd1306Diagnostics(i2c_di_t * psI2C) {
 	SL_DBG("ssd1306: Filling screen\r\n");
 	ssd1306SetTextCursor(0, 0); ssd1306PutString("|00000000|");
 	ssd1306SetTextCursor(0, 1); ssd1306PutString("+11111111+");

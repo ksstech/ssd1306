@@ -67,10 +67,10 @@ void ssd1306Clear(void);
 int	ssd1306PutChar(int cChr);
 void ssd1306PutString(const char *);
 
-int ssd1306Identify(i2c_di_t * psI2C_DI);
-int ssd1306Config(i2c_di_t * psI2C_DI);
-void ssd1306ReConfig(i2c_di_t * psI2C_DI);
-int ssd1306Diagnostics(i2c_di_t * psI2C_DI);
+int ssd1306Identify(i2c_di_t * psI2C);
+int ssd1306Config(i2c_di_t * psI2C);
+int ssd1306ReConfig(i2c_di_t * psI2C);
+int ssd1306Diagnostics(i2c_di_t * psI2C);
 
 int ssd1306Report(report_t * psR);
 
