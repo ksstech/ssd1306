@@ -99,9 +99,9 @@ static void	ssd1306I2C_IO(u8_t * pBuf, size_t Size) {
 		myASSERT(0);
 	}
 	if (Size == 1) {
-		iRV = halI2CM_Queue(sSSD1306.psI2C, i2cR_B, NULL, 0, pBuf, Size, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
+		iRV = halI2C_Queue(sSSD1306.psI2C, i2cR_B, NULL, 0, pBuf, Size, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
 	} else {
-		iRV = halI2CM_Queue(sSSD1306.psI2C, i2cW_B, pBuf, Size, NULL, 0, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
+		iRV = halI2C_Queue(sSSD1306.psI2C, i2cW_B, pBuf, Size, NULL, 0, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
 	}
 	if (iRV < erSUCCESS)
 		xSyslogError(__FUNCTION__, iRV);
