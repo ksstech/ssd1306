@@ -6,7 +6,7 @@
 #include	"hal_variables.h"
 
 #if (halHAS_SSD1306 > 0)
-#include	"ssd1306.h"
+#include	"hal_i2c_common.h"
 #include	"printfx.h"									// +x_definitions +stdarg +stdint +stdio
 #include	"syslog.h"
 #include	"systiming.h"
@@ -438,6 +438,7 @@ int ssd1306ReConfig(i2c_di_t * psI2C) {
 	#else
 	#warning "Undefined display type"
 	#endif
+	xRtosSetDevice(devMASK_SSD1306);
 	return erSUCCESS;
 }
 

@@ -33,6 +33,8 @@ enum { eDISPLAY };										// sensor values display on/off
 
 // ####################################### structures ##############################################
 
+struct i2c_di_t;
+
 typedef struct __attribute__((packed)) ssd1306_t {
 	i2c_di_t * psI2C;
 	u8_t MinContrast;
@@ -67,12 +69,13 @@ void ssd1306Clear(void);
 int	ssd1306PutChar(int cChr);
 void ssd1306PutString(const char *);
 
-int ssd1306Identify(i2c_di_t * psI2C);
-int ssd1306Config(i2c_di_t * psI2C);
-int ssd1306ReConfig(i2c_di_t * psI2C);
-int ssd1306Diagnostics(i2c_di_t * psI2C);
+int ssd1306Identify(struct i2c_di_t * psI2C);
+int ssd1306Config(struct i2c_di_t * psI2C);
+int ssd1306ReConfig(struct i2c_di_t * psI2C);
+int ssd1306Diagnostics(struct i2c_di_t * psI2C);
 
-int ssd1306Report(report_t * psR);
+struct report_t;
+int ssd1306Report(struct report_t * psR);
 
 #ifdef __cplusplus
 }
