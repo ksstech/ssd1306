@@ -313,67 +313,27 @@ void ssd1306PutString(const char * pString) {
 // ############################# Device identify, diagnose, [re]config #############################
 
 int	ssd1306Identify(i2c_di_t * psI2C) {
-	psI2C->TRXmS = 10;
-	psI2C->CLKuS = 400;			// Max 13000 (13mS)
-	psI2C->Test	= 1;
 	sSSD1306.psI2C = psI2C;
-	ssd1306GetStatus();									// detect & verify existence.
-	psI2C->Test = 0;
-	if ((sSSD1306.status & 0x03) != 0x03) {
-		SL_ERR("I2C device at 0x%02X NOT SSD1306 (%02X)", psI2C->Addr, sSSD1306.status);
-		sSSD1306.psI2C = NULL;
-		return erFAILURE;
-	}
 	psI2C->Type = i2cDEV_SSD1306;
 	psI2C->Speed = i2cSPEED_400;						// 10 bytes = 1mS @ 100Khz, 250uS @ 400Khz
-	xEventGroupSetBits(EventDevices, devMASK_SSD1306);
-	return erSUCCESS;
+	psI2C->TObus = 25;
+	psI2C->Test	= 1;
+	int iRV = ssd1306GetStatus();						// detect & verify existence.
+	if (iRV < erSUCCESS) goto exit;
+	if ((sSSD1306.status & 0x03) != 0x03) goto err_whoami;
+	psI2C->IDok = 1;
+	psI2C->Test = 0;
+	goto exit;
+err_whoami:
+	iRV = erINV_WHOAMI;
+exit:
+	return iRV;
 }
 
 int	ssd1306Config(i2c_di_t * psI2C) {
-	IF_SYSTIMER_INIT(debugTIMING, stSSD1306A, stMICROS, "SSD1306a", 1500, 15000);
-	IF_SYSTIMER_INIT(debugTIMING, stSSD1306B, stMICROS, "SSD1306b", 300, 3000);
-	return ssd1306ReConfig(psI2C);
-}
+	if (!psI2C->IDok) return erINV_STATE;
 
-/*
-ok	 SSD1306_DISPLAYOFF, // display off
-ok	 SSD1306_MEMORYMODE, HORIZONTAL_ADDRESSING_MODE, // Page Addressing mode
-ok   SSD1306_COMSCANDEC,             // Scan from 127 to 0 (Reverse scan)
-ok   SSD1306_SETSTARTLINE | 0x00,    // First line to start scanning from
-ok   SSD1306_SETCONTRAST, 0x7F,      // contast value to 0x7F according to datasheet
-ok   SSD1306_SEGREMAP | 0x01,        // Use reverse mapping. 0x00 - is normal mapping
-ok   SSD1306_NORMALDISPLAY,
-ok   SSD1306_SETMULTIPLEX, 63,       // Reset to default MUX. See datasheet
-ok   SSD1306_SETDISPLAYOFFSET, 0x00, // no offset
-ok   SSD1306_SETDISPLAYCLOCKDIV, 0x80,// set to default ratio/osc frequency
-ok   SSD1306_SETPRECHARGE, 0x22,     // switch precharge to 0x22 // 0xF1
-ok   SSD1306_SETCOMPINS, 0x12,       // set divide ratio
-ok   SSD1306_SETVCOMDETECT, 0x20,    // vcom deselect to 0x20 // 0x40
-ok   SSD1306_CHARGEPUMP, 0x14,       // Enable charge pump
-ok   SSD1306_DISPLAYALLON_RESUME,
-ok   SSD1306_DISPLAYON,
-
-//	ssd1306SendCommand_2(ssd1306SETMULTIPLEX, halLCD_MAX_PY-1);
-//	ssd1306SetOffset(0);
-//	ssd1306SendCommand_1(ssd1306SETSTARTLINE | 0x0);
-//	ssd1306SendCommand_1(ssd1306SEGREMAP | 0x1);
-//	ssd1306SendCommand_1(ssd1306COMSCANDEC);
-//	ssd1306SendCommand_2(ssd1306SETCOMPINS, 0x12);
-//	ssd1306SendCommand_2(ssd1306SETDISPLAYCLOCKDIV, 0x80);
-//	ssd1306SendCommand_2(ssd1306CHARGEPUMP, ssd1306CHARGEPUMP_ON);
-//	ssd1306SetMemoryMode(0x00);
-//	ssd1306SendCommand_1(ssd1306DISPLAYALLON_RESUME);
-//	ssd1306SetInverse(0);
-//	ssd1306SetScrollState(0);
-//	ssd1306SetDisplayState(1);
-//	ssd1306Clear();
-	sSSD1306.MinContrast = 0;
-	sSSD1306.MaxContrast = 255;
-//	ssd1306SetContrast(128);
-*/
-
-int ssd1306ReConfig(i2c_di_t * psI2C) {
+	psI2C->CFGok = 0;
 	#if (ssd1306_64_32 == 1)
 	ssd1306SendCommand_2(ssd1306SETMULTIPLEX, halLCD_MAX_PY-1);
 	ssd1306SetOffset(0);
@@ -427,13 +387,54 @@ int ssd1306ReConfig(i2c_di_t * psI2C) {
 	ssd1306Clear();
 	sSSD1306.MinContrast = 0;
 	sSSD1306.MaxContrast = 255;
-
 	#else
 	#warning "Undefined display type"
 	#endif
-	xRtosSetDevice(devMASK_SSD1306);
+	psI2C->CFGok = 0;
+	// once off init....
+	if (!psI2C->CFGerr) {
+		IF_SYSTIMER_INIT(debugTIMING, stSSD1306A, stMICROS, "SSD1306a", 1500, 15000);
+		IF_SYSTIMER_INIT(debugTIMING, stSSD1306B, stMICROS, "SSD1306b", 300, 3000);
+	}
 	return erSUCCESS;
 }
+
+/*
+ok	 SSD1306_DISPLAYOFF, // display off
+ok	 SSD1306_MEMORYMODE, HORIZONTAL_ADDRESSING_MODE, // Page Addressing mode
+ok   SSD1306_COMSCANDEC,             // Scan from 127 to 0 (Reverse scan)
+ok   SSD1306_SETSTARTLINE | 0x00,    // First line to start scanning from
+ok   SSD1306_SETCONTRAST, 0x7F,      // contast value to 0x7F according to datasheet
+ok   SSD1306_SEGREMAP | 0x01,        // Use reverse mapping. 0x00 - is normal mapping
+ok   SSD1306_NORMALDISPLAY,
+ok   SSD1306_SETMULTIPLEX, 63,       // Reset to default MUX. See datasheet
+ok   SSD1306_SETDISPLAYOFFSET, 0x00, // no offset
+ok   SSD1306_SETDISPLAYCLOCKDIV, 0x80,// set to default ratio/osc frequency
+ok   SSD1306_SETPRECHARGE, 0x22,     // switch precharge to 0x22 // 0xF1
+ok   SSD1306_SETCOMPINS, 0x12,       // set divide ratio
+ok   SSD1306_SETVCOMDETECT, 0x20,    // vcom deselect to 0x20 // 0x40
+ok   SSD1306_CHARGEPUMP, 0x14,       // Enable charge pump
+ok   SSD1306_DISPLAYALLON_RESUME,
+ok   SSD1306_DISPLAYON,
+
+//	ssd1306SendCommand_2(ssd1306SETMULTIPLEX, halLCD_MAX_PY-1);
+//	ssd1306SetOffset(0);
+//	ssd1306SendCommand_1(ssd1306SETSTARTLINE | 0x0);
+//	ssd1306SendCommand_1(ssd1306SEGREMAP | 0x1);
+//	ssd1306SendCommand_1(ssd1306COMSCANDEC);
+//	ssd1306SendCommand_2(ssd1306SETCOMPINS, 0x12);
+//	ssd1306SendCommand_2(ssd1306SETDISPLAYCLOCKDIV, 0x80);
+//	ssd1306SendCommand_2(ssd1306CHARGEPUMP, ssd1306CHARGEPUMP_ON);
+//	ssd1306SetMemoryMode(0x00);
+//	ssd1306SendCommand_1(ssd1306DISPLAYALLON_RESUME);
+//	ssd1306SetInverse(0);
+//	ssd1306SetScrollState(0);
+//	ssd1306SetDisplayState(1);
+//	ssd1306Clear();
+	sSSD1306.MinContrast = 0;
+	sSSD1306.MaxContrast = 255;
+//	ssd1306SetContrast(128);
+*/
 
 int ssd1306Diagnostics(i2c_di_t * psI2C) {
 	SL_DBG("ssd1306: Filling screen\r\n");
