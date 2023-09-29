@@ -6,8 +6,7 @@
 
 #include "fonts.h"
 
-#include "hal_i2c_common.h"
-#include <stdint.h>
+#include "definitions.h"
 
 /*	Wemos 0.96" OLED
  	D3	IO17	BtnA default	M90E26 CS1 conflict
@@ -34,9 +33,8 @@ enum { eDISPLAY };										// sensor values display on/off
 // ####################################### structures ##############################################
 
 struct i2c_di_t;
-
 typedef struct __attribute__((packed)) ssd1306_t {
-	i2c_di_t * psI2C;
+	struct i2c_di_t * psI2C;
 	u8_t MinContrast;
 	u8_t MaxContrast;
 	u8_t NowContrast;

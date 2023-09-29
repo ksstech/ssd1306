@@ -3,14 +3,16 @@
  * https://github.com/wtfuzz/ssd1306_text
  */
 
-#include	"hal_variables.h"
+#include "hal_config.h"
 
 #if (halHAS_SSD1306 > 0)
-#include	"hal_i2c_common.h"
-#include	"printfx.h"									// +x_definitions +stdarg +stdint +stdio
-#include	"syslog.h"
-#include	"systiming.h"
-#include	"x_errors_events.h"
+
+#include "hal_i2c_common.h"
+#include "printfx.h"									// +x_definitions +stdarg +stdint +stdio
+#include "ssd1306.h"
+#include "syslog.h"
+#include "systiming.h"
+#include "x_errors_events.h"
 
 // ######################################## Build macros ###########################################
 
@@ -93,18 +95,13 @@ u8_t BufBits[((halLCD_MAX_PX * halLCD_MAX_PY * halLCD_BITS_PX) / BITS_IN_BYTE) +
 static void	ssd1306I2C_IO(u8_t * pBuf, size_t Size) {
 	int iRV;
 	if (((u32_t)sSSD1306.psI2C & 0x00FFFFFFUL) == 0) {
-		RPL(" Ptr=%p  P=%d  A=%lu  I=%lu  T=%lu  S=%lu  Rx=%d  Tx=%d\r\n",
-				sSSD1306.psI2C, sSSD1306.psI2C->Port, sSSD1306.psI2C->Addr, sSSD1306.psI2C->DevIdx,
-				sSSD1306.psI2C->Type, sSSD1306.psI2C->Speed, sSSD1306.psI2C->RXxsb, sSSD1306.psI2C->TXxsb);
+		RPL(" Ptr=%p  P=%d  A=%lu  I=%lu  T=%lu  S=%lu\r\n", sSSD1306.psI2C, sSSD1306.psI2C->Port,
+			sSSD1306.psI2C->Addr, sSSD1306.psI2C->DevIdx, sSSD1306.psI2C->Type, sSSD1306.psI2C->Speed);
 		myASSERT(0);
 	}
-	if (Size == 1) {
-		iRV = halI2C_Queue(sSSD1306.psI2C, i2cR_B, NULL, 0, pBuf, Size, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
-	} else {
-		iRV = halI2C_Queue(sSSD1306.psI2C, i2cW_B, pBuf, Size, NULL, 0, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
-	}
-	if (iRV < erSUCCESS)
-		xSyslogError(__FUNCTION__, iRV);
+	if (Size == 1) iRV = halI2C_Queue(sSSD1306.psI2C, i2cR_B, NULL, 0, pBuf, Size, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
+	else iRV = halI2C_Queue(sSSD1306.psI2C, i2cW_B, pBuf, Size, NULL, 0, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
+	if (iRV < erSUCCESS) xSyslogError(__FUNCTION__, iRV);
 }
 
 /**
@@ -148,8 +145,7 @@ static bool ssd1306StepCursor(bool DoUpdate) {
 	sSSD1306.cur_seg += halLCD_FONT_PX;				// update the cursor location
 	if (sSSD1306.cur_seg >= (halLCD_MAX_PX - halLCD_RIGHT_PAD)) {
 		++sSSD1306.cur_row;
-		if (sSSD1306.cur_row == halLCD_MAX_ROW)
-			sSSD1306.cur_row = 0;
+		if (sSSD1306.cur_row == halLCD_MAX_ROW) sSSD1306.cur_row = 0;
 		if (DoUpdate) {
 			ssd1306SetPageAddr(sSSD1306.cur_row);
 			ssd1306SetSegmentAddr(halLCD_LEFT_PAD);
@@ -208,11 +204,8 @@ bool ssd1306GetDisplayState(void) { return sSSD1306.state; }
  * @param	Contrast - 0->255 dim to bright
  */
 u8_t ssd1306SetContrast(u8_t Contrast) {
-	if (Contrast > sSSD1306.MaxContrast) {
-		Contrast = sSSD1306.MaxContrast;
-	} else if (Contrast < sSSD1306.MinContrast) {
-		Contrast = sSSD1306.MinContrast;
-	}
+	if (Contrast > sSSD1306.MaxContrast) Contrast = sSSD1306.MaxContrast;
+	else if (Contrast < sSSD1306.MinContrast) Contrast = sSSD1306.MinContrast;
 /* See https://github.com/ThingPulse/esp8266-oled-ssd1306/issues/134
  * Contrast		PC_0 	PC_1	Vcom
  * 0x00			0x1F	0x11	0x00
@@ -485,4 +478,5 @@ int ssd1306Report(report_t * psR) {
 	iRV += wprintfx(psR, "SSD1306:  Seg:%d/%d  Page:%d/%d\r\n", sSSD1306.cur_seg, halLCD_MAX_PX, sSSD1306.cur_row, halLCD_MAX_ROW);
 	return iRV;
 }
+
 #endif
