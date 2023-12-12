@@ -5,7 +5,6 @@
 #pragma	once
 
 #include "fonts.h"
-
 #include "definitions.h"
 
 /*	Wemos 0.96" OLED
