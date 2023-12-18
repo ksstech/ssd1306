@@ -13,6 +13,7 @@
 #include "syslog.h"
 #include "systiming.h"
 #include "x_errors_events.h"
+#include <string.h>
 
 // ######################################## Build macros ###########################################
 
