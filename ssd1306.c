@@ -1,5 +1,5 @@
 /**
- * ssd1306.c - Copyright (c) 2014-23 Andre M. Maree / KSS Technologies (Pty) Ltd.
+ * ssd1306.c - Copyright (c) 2014-24 Andre M. Maree / KSS Technologies (Pty) Ltd.
  * https://github.com/wtfuzz/ssd1306_text
  */
 
