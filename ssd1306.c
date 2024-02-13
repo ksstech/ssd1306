@@ -5,7 +5,7 @@
 
 #include "hal_config.h"
 
-#if (halHAS_SSD1306 > 0)
+#if (HAL_SSD1306 > 0)
 
 #include "hal_i2c_common.h"
 #include "printfx.h"									// +x_definitions +stdarg +stdint +stdio
