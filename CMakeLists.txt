@@ -2,7 +2,7 @@
 set( srcs "ssd1306.c" )
 set( include_dirs "." )
 set( priv_include_dirs )
-set( requires "fonts" )
+set( requires "fonts main" )
 set( priv_requires )
 
 idf_component_register(
