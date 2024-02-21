@@ -77,4 +77,3 @@ int ssd1306Report(struct report_t * psR);
 #ifdef __cplusplus
 }
 #endif
-
