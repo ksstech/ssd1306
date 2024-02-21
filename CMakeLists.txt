@@ -2,8 +2,8 @@
 set( srcs "ssd1306.c" )
 set( include_dirs "." )
 set( priv_include_dirs )
-set( requires "fonts hal_esp32" )
-set( priv_requires "common fonts printfx syslog systiming"  )
+set( requires )
+set( priv_requires "fonts"  )
 
 idf_component_register(
 	SRCS ${srcs}
