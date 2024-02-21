@@ -2,8 +2,8 @@
 set( srcs "ssd1306.c" )
 set( include_dirs "." )
 set( priv_include_dirs )
-set( requires )
-set( priv_requires "fonts"  )
+set( requires "fonts" )
+set( priv_requires )
 
 idf_component_register(
 	SRCS ${srcs}
