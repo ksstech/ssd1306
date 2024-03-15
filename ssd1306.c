@@ -3,7 +3,7 @@
  * https://github.com/wtfuzz/ssd1306_text
  */
 
-#include "hal_config.h"
+#include "hal_platform.h"
 
 #if (HAL_SSD1306 > 0)
 
