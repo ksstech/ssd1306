@@ -100,9 +100,13 @@ static void	ssd1306I2C_IO(u8_t * pBuf, size_t Size) {
 			sSSD1306.psI2C->Addr, sSSD1306.psI2C->DevIdx, sSSD1306.psI2C->Type, sSSD1306.psI2C->Speed);
 		myASSERT(0);
 	}
-	if (Size == 1) iRV = halI2C_Queue(sSSD1306.psI2C, i2cR_B, NULL, 0, pBuf, Size, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
-	else iRV = halI2C_Queue(sSSD1306.psI2C, i2cW_B, pBuf, Size, NULL, 0, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
-	if (iRV < erSUCCESS) xSyslogError(__FUNCTION__, iRV);
+	if (Size == 1) {
+		iRV = halI2C_Queue(sSSD1306.psI2C, i2cR_B, NULL, 0, pBuf, Size, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
+	} else {
+		iRV = halI2C_Queue(sSSD1306.psI2C, i2cW_B, pBuf, Size, NULL, 0, (i2cq_p1_t)NULL, (i2cq_p2_t)NULL);
+	}
+	if (iRV < erSUCCESS) 
+		xSyslogError(__FUNCTION__, iRV);
 }
 
 /**
@@ -302,9 +306,8 @@ void ssd1306PutString(const char * pString) {
 			for(int fi = 0; fi <= halLCD_RIGHT_PAD; BufBits[bbi++] = 0, ++fi);
 	}
 	IF_myASSERT(debugTRACK, bbi < sizeof(BufBits));
-	if (ci) {
+	if (ci)
 		ssd1306I2C_IO(BufBits, bbi);					// send the character(s)
-	}
 	// TODO: Add support to update the cursor locations
 	ssd1306SendCommand_3(ssd1306PAGEADDR, sSSD1306.cur_row, halLCD_MAX_ROW);
 	ssd1306SendCommand_3(ssd1306COLUMNADDR, sSSD1306.cur_seg + ssd1306_ANOMALY_PAD, halLCD_MAX_PX + ssd1306_ANOMALY_PAD);
@@ -320,41 +323,39 @@ int	ssd1306Identify(i2c_di_t * psI2C) {
 	psI2C->TObus = 25;
 	psI2C->Test	= 1;
 	int iRV = ssd1306GetStatus();						// detect & verify existence.
-	if (iRV < erSUCCESS) goto exit;
-	if ((sSSD1306.status & 0x03) != 0x03) goto err_whoami;
+	if (iRV < erSUCCESS)
+		return iRV;
+	if ((sSSD1306.status & 0x03) != 0x03)
+		return erINV_WHOAMI;
 	psI2C->IDok = 1;
 	psI2C->Test = 0;
-	goto exit;
-err_whoami:
-	iRV = erINV_WHOAMI;
-exit:
 	return iRV;
 }
 
+
 int	ssd1306Config(i2c_di_t * psI2C) {
-	if (!psI2C->IDok) return erINV_STATE;
-
+	if (!psI2C->IDok)
+		return erINV_STATE;
 	psI2C->CFGok = 0;
-	#if (ssd1306_64_32 == 1)
-	ssd1306SendCommand_2(ssd1306SETMULTIPLEX, halLCD_MAX_PY-1);
-	ssd1306SetOffset(0);
-	ssd1306SendCommand_1(ssd1306SETSTARTLINE | 0x0);
-	ssd1306SendCommand_1(ssd1306SEGREMAP | 0x1);
-	ssd1306SendCommand_1(ssd1306COMSCANDEC);
-	ssd1306SendCommand_2(ssd1306SETCOMPINS, 0x12);
-	ssd1306SendCommand_2(ssd1306SETDISPLAYCLOCKDIV, 0x80);
-	ssd1306SendCommand_2(ssd1306CHARGEPUMP, ssd1306CHARGEPUMP_ON);
-	ssd1306SetMemoryMode(0x00);
-	ssd1306SendCommand_1(ssd1306DISPLAYALLON_RESUME);
-	ssd1306SetInverse(0);
-	ssd1306SetScrollState(0);
-	ssd1306SetDisplayState(1);
-	ssd1306Clear();
-	sSSD1306.MinContrast = 0;
-	sSSD1306.MaxContrast = 255;
-	ssd1306SetContrast(128);
-
-	#elif (ssd1306_128_64 == 1)
+	#if (halLCD_RESOLUTION == halLCD_64_48)
+		ssd1306SendCommand_2(ssd1306SETMULTIPLEX, halLCD_MAX_PY-1);
+		ssd1306SetOffset(0);
+		ssd1306SendCommand_1(ssd1306SETSTARTLINE | 0x0);
+		ssd1306SendCommand_1(ssd1306SEGREMAP | 0x1);
+		ssd1306SendCommand_1(ssd1306COMSCANDEC);
+		ssd1306SendCommand_2(ssd1306SETCOMPINS, 0x12);
+		ssd1306SendCommand_2(ssd1306SETDISPLAYCLOCKDIV, 0x80);
+		ssd1306SendCommand_2(ssd1306CHARGEPUMP, ssd1306CHARGEPUMP_ON);
+		ssd1306SetMemoryMode(0x00);
+		ssd1306SendCommand_1(ssd1306DISPLAYALLON_RESUME);
+		ssd1306SetInverse(0);
+		ssd1306SetScrollState(0);
+		ssd1306SetDisplayState(1);
+		ssd1306Clear();
+		sSSD1306.MinContrast = 0;
+		sSSD1306.MaxContrast = 255;
+		ssd1306SetContrast(128);
+	#elif (halLCD_RESOLUTION == halLCD_128_64)
 	u8_t InitBuf[] = {
 		ssd1306DISPLAYOFF,
 		ssd1306SETDISPLAYCLOCKDIV,		0x80,
@@ -384,18 +385,20 @@ int	ssd1306Config(i2c_di_t * psI2C) {
 		ssd1306SCROLL_DEACTIVATE,
 		ssd1306DISPLAYON,
 	};
-	ssd1306I2C_IO(InitBuf, sizeof(InitBuf));
-	ssd1306Clear();
-	sSSD1306.MinContrast = 0;
-	sSSD1306.MaxContrast = 255;
+		ssd1306I2C_IO(InitBuf, sizeof(InitBuf));
+		ssd1306Clear();
+		sSSD1306.MinContrast = 0;
+		sSSD1306.MaxContrast = 255;
 	#else
-	#warning "Undefined display type"
+		#warning "Undefined display type"
 	#endif
-	psI2C->CFGok = 0;
+	psI2C->CFGok = 1;
+	xRtosSetDevice(devMASK_SSD1306);
 	// once off init....
-	if (!psI2C->CFGerr) {
+	if (psI2C->CFGerr == 0) {
 		IF_SYSTIMER_INIT(debugTIMING, stSSD1306A, stMICROS, "SSD1306a", 1500, 15000);
 		IF_SYSTIMER_INIT(debugTIMING, stSSD1306B, stMICROS, "SSD1306b", 300, 3000);
+		ssd1306PutString(ssd1306HELLO);
 	}
 	return erSUCCESS;
 }
