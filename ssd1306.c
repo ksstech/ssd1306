@@ -332,6 +332,7 @@ int	ssd1306Identify(i2c_di_t * psI2C) {
 	return iRV;
 }
 
+#define ssd1306HELLO "LCD SSD1306" " Irmacos  " "--Driver--" " Startup  " "0123456789" "abcdefghij"
 
 int	ssd1306Config(i2c_di_t * psI2C) {
 	if (!psI2C->IDok)
