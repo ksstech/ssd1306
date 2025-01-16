@@ -395,7 +395,7 @@ int	ssd1306Config(i2c_di_t * psI2C) {
 		#warning "Undefined display type"
 	#endif
 	psI2C->CFGok = 1;
-	xRtosSetDevice(devMASK_SSD1306);
+	halEventUpdateDevice(devMASK_SSD1306, 1);
 	// once off init....
 	if (psI2C->CFGerr == 0) {
 		IF_SYSTIMER_INIT(debugTIMING, stSSD1306A, stMICROS, "SSD1306a", 1500, 15000);
