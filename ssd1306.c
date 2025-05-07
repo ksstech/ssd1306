@@ -482,7 +482,7 @@ int ssd1306Diagnostics(i2c_di_t * psI2C) {
 
 int ssd1306Report(report_t * psR) {
 	int iRV = halI2C_DeviceReport(psR, (void *) sSSD1306.psI2C);
-	iRV += wprintfx(psR, "SSD1306:  Seg:%d/%d  Page:%d/%d\r\n", sSSD1306.cur_seg, halLCD_MAX_PX, sSSD1306.cur_row, halLCD_MAX_ROW);
+	iRV += xReport(psR, "SSD1306:  Seg:%d/%d  Page:%d/%d\r\n", sSSD1306.cur_seg, halLCD_MAX_PX, sSSD1306.cur_row, halLCD_MAX_ROW);
 	return iRV;
 }
 
